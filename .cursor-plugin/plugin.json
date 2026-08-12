@@ -1,0 +1,21 @@
+{
+  "name": "brig",
+  "version": "0.1.0",
+  "description": "Wheelhouse Revenue Management agent skills and MCP plugin. Portfolio pacing, pricing diagnostics, local KPI cache, and leaderboard workflows for mcp.usewheelhouse.com.",
+  "author": {
+    "name": "Wheelhouse",
+    "email": "support@usewheelhouse.com"
+  },
+  "repository": "https://github.com/pricemethod/brig",
+  "license": "Apache-2.0",
+  "keywords": [
+    "wheelhouse",
+    "revenue-management",
+    "pricing",
+    "mcp",
+    "hospitality",
+    "short-term-rental"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./mcp.json"
+}

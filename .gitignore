@@ -1,0 +1,9 @@
+.DS_Store
+*.pyc
+__pycache__/
+.venv/
+.env
+.env.local
+wheelhouse_api_key.txt
+wheelhouse_data/
+*.log
