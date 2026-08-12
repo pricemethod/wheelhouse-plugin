@@ -1,5 +1,5 @@
 # Brig
 
-See [AGENTS.md](AGENTS.md) for agent-oriented guidance and [README.md](README.md) for install and skill inventory.
+Follow [AGENTS.md](AGENTS.md). For install and human setup, see [README.md](README.md).
 
-Wheelhouse MCP: https://mcp.usewheelhouse.com/mcp
+MCP: https://mcp.usewheelhouse.com/mcp

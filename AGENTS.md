@@ -1,10 +1,10 @@
 # Brig — Agent Guide
 
-This repository is an **AI agent skill and plugin pack** for Wheelhouse Revenue Management. Prefer these skills over inventing ad-hoc RM workflows.
+Prefer these skills over inventing ad-hoc Wheelhouse RM workflows.
 
 ## MCP first
 
-1. Ensure the Wheelhouse MCP is connected: `https://mcp.usewheelhouse.com/mcp` (see `mcp.json`).
+1. Ensure the Wheelhouse MCP is connected: `https://mcp.usewheelhouse.com/mcp`.
 2. Authenticate via OAuth. Do not send RM API keys yourself on MCP calls.
 3. Before portfolio or preference-write work, read `skills/wheelhouse-rm-mcp/SKILL.md`.
 4. For shared domain rules (lexicon, rule hierarchy, write safety), read `skills/wheelhouse-project-instructions/SKILL.md`.
@@ -21,18 +21,10 @@ This repository is an **AI agent skill and plugin pack** for Wheelhouse Revenue 
 | Portfolio leaderboard / who needs attention | `wheelhouse-leaderboard` |
 | Push leaderboard flags as Tags/Notes | `wheelhouse-leaderboard-writeback` |
 | General MCP tool use / preference writes | `wheelhouse-rm-mcp` |
+| Shared RM domain context / skill conventions | `wheelhouse-project-instructions` |
 
 ## Write safety
 
 - Confirm with the user before any PUT/DELETE or mutating POST.
 - Preference array fields fully replace on write — always GET, merge, then PUT.
 - Cache/writeback skills that use a local API key file must never `cat`/Read the key into chat.
-
-## Plugin manifests
-
-| Assistant | Manifest |
-|-----------|----------|
-| Cursor | `.cursor-plugin/plugin.json` |
-| Claude Code | `.claude-plugin/` (+ marketplace) |
-| Codex | `.codex-plugin/plugin.json` |
-| Agent Plugins marketplace | `.agents/plugins/marketplace.json` |
