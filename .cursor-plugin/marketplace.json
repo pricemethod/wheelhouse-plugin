@@ -19,12 +19,12 @@
       },
       "license": "Apache-2.0",
       "keywords": [
-        "wheelhouse",
-        "revenue-management",
-        "pricing",
-        "mcp",
         "hospitality",
-        "short-term-rental"
+        "mcp",
+        "pricing",
+        "revenue-management",
+        "short-term-rental",
+        "wheelhouse"
       ],
       "category": "productivity"
     }

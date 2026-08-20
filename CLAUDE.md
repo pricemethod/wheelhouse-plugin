@@ -1,4 +1,4 @@
-# Brig
+# Wheelhouse Plugin
 
 Follow [AGENTS.md](AGENTS.md). For install and human setup, see [README.md](README.md).
 

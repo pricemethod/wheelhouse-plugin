@@ -1,5 +1,5 @@
 ---
-name: brig
+name: wheelhouse-plugin
 description: Wheelhouse Revenue Management agent skills for the Wheelhouse MCP (mcp.usewheelhouse.com). STLY pacing, future-rate overpricing, price-change attribution, local KPI cache, portfolio leaderboards, and custom-rate interventions.
 metadata:
   version: "0.1.0"
@@ -9,7 +9,7 @@ metadata:
   tags: wheelhouse,mcp,revenue-management,pricing,hospitality
 ---
 
-# Brig — Wheelhouse Agent Skills
+# Wheelhouse Plugin — Agent Skills
 
 Skill pack for the [Wheelhouse Revenue Management MCP](https://mcp.usewheelhouse.com/mcp). Prefer these skills over inventing ad-hoc RM workflows.
 

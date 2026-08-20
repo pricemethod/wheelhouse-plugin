@@ -1,4 +1,4 @@
-# Brig
+# Wheelhouse Plugin
 
 Give your AI agent a captain in the Wheelhouse — agent skills and a plugin for the [Wheelhouse Revenue Management MCP](https://mcp.usewheelhouse.com/mcp).
 
@@ -9,23 +9,32 @@ Give your AI agent a captain in the Wheelhouse — agent skills and a plugin for
 
 ## Install
 
+Full client-by-client steps: [docs.usewheelhouse.com/rm/wheelhouse-plugin](https://docs.usewheelhouse.com/rm/wheelhouse-plugin).
+
 ### Cursor
 
-1. Add this repository as a local or marketplace plugin (manifest: `.cursor-plugin/plugin.json`).
-2. Confirm the Wheelhouse MCP is registered from `mcp.json` (`https://mcp.usewheelhouse.com/mcp`).
-3. Sign in with your Wheelhouse account when the MCP OAuth flow prompts.
+```bash
+cursor-agent plugin marketplace add https://github.com/pricemethod/wheelhouse-plugin
+```
+
+Then install **wheelhouse-plugin** from **Customize**. Teams and Enterprise can also import the repo under **Dashboard → Plugins**.
 
 Skills under `skills/` are discovered automatically.
 
 ### Claude Code
 
 ```text
-/plugin marketplace add pricemethod/brig
+/plugin marketplace add pricemethod/wheelhouse-plugin
+/plugin install wheelhouse-plugin@wheelhouse-plugin
 ```
 
 ### Codex / Agent Plugins
 
-Use `.codex-plugin/plugin.json` or `.agents/plugins/marketplace.json`.
+```bash
+codex plugin marketplace add pricemethod/wheelhouse-plugin
+```
+
+Then install **wheelhouse-plugin** from the Codex plugins list. Manifests: `.codex-plugin/plugin.json`, `.agents/plugins/marketplace.json`.
 
 ## What you can ask
 
@@ -48,6 +57,7 @@ Cache and writeback skills (`wheelhouse-data-sync-api`, `wheelhouse-leaderboard-
 
 ## Links
 
+- Install: https://docs.usewheelhouse.com/rm/wheelhouse-plugin
 - MCP: https://mcp.usewheelhouse.com/mcp
 - API reference: https://api.usewheelhouse.com/wheelhouse_rm_api
 - License: [Apache License 2.0](LICENSE)

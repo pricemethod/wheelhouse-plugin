@@ -13,8 +13,7 @@ Read this before answering portfolio-level or preference-write questions. Tool s
 
 ## Tool access
 
-- The stable `/mcp` endpoint exposes `wheelhouse_*` tools directly.
-- The beta `/mcp/beta` endpoint uses FastMCP Code Mode. Discover tools with `search`, inspect parameters with `get_schema`, then compose calls in `execute` via `await call_tool("wheelhouse_rm…", {…})`. Prefer paginating and aggregating inside one `execute` block so intermediate pages do not flood context.
+- `/mcp` uses FastMCP Code Mode. Discover tools with `search`, inspect parameters with `get_schema`, then compose calls in `execute` via `await call_tool("wheelhouse_rm…", {…})`. Prefer paginating and aggregating inside one `execute` block so intermediate pages do not flood context.
 
 ## Portfolio-first rules
 

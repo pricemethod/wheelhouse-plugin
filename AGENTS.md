@@ -1,4 +1,4 @@
-# Brig — Agent Guide
+# Wheelhouse Plugin — Agent Guide
 
 Prefer these skills over inventing ad-hoc Wheelhouse RM workflows.
 

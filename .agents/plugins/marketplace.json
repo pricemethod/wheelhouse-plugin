@@ -1,5 +1,5 @@
 {
-  "name": "wheelhouse-brig",
+  "name": "wheelhouse-plugin",
   "owner": {
     "name": "Wheelhouse",
     "email": "support@usewheelhouse.com"
@@ -9,7 +9,7 @@
   },
   "plugins": [
     {
-      "name": "brig",
+      "name": "wheelhouse-plugin",
       "source": "./",
       "description": "Wheelhouse Revenue Management agent skills and MCP plugin. Portfolio pacing, pricing diagnostics, local KPI cache, and leaderboard workflows for mcp.usewheelhouse.com.",
       "version": "0.1.0",
