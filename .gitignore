@@ -6,4 +6,6 @@ __pycache__/
 .env.local
 wheelhouse_api_key.txt
 wheelhouse_data/
+wheelhouse_calendar_data/
+wheelhouse_calendar_data_history/
 *.log

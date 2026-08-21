@@ -1,7 +1,7 @@
 {
   "name": "wheelhouse-plugin",
   "version": "0.1.0",
-  "description": "Wheelhouse Revenue Management agent skills and MCP plugin. Portfolio pacing, pricing diagnostics, local KPI cache, and leaderboard workflows for mcp.usewheelhouse.com.",
+  "description": "Wheelhouse Revenue Management agent skills and MCP plugin. Portfolio pacing, pricing diagnostics, local data caches, and pickup priority lists for mcp.usewheelhouse.com.",
   "author": {
     "name": "Wheelhouse",
     "email": "support@usewheelhouse.com"

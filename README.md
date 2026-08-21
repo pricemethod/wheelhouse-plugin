@@ -43,17 +43,18 @@ Once the plugin and MCP are connected, ask your assistant things like:
 - How is this listing or portfolio pacing vs same time last year? → `stly-pacing`
 - Are future months overpriced vs last year’s booked rates? → `future-rate-overpricing`
 - Did a recent rate or preference change drive bookings? → `price-change-attribution`
-- Set a custom rate on these dates → `custom-rate-intervention`
-- Who needs attention across my portfolio? → `wheelhouse-data-sync-api` then `wheelhouse-leaderboard`
-- Push leaderboard flags back as Tags/Notes → `wheelhouse-leaderboard-writeback`
+- Did that custom rate get booked? → `custom-rate-attribution`
+- Who needs attention / isn’t booking? → `occupancy-pickup-priority-list`
+- Which listings are selling fast? → `fast-pickup-priority-list`
+- Sync listings, KPIs, reservations, or calendars to disk → `wheelhouse-data-sync-api`, `wheelhouse-reservations-sync-api`, `wheelhouse-calendar-sync-api`
 
-Shared MCP and domain guidance lives in `wheelhouse-rm-mcp` and `wheelhouse-project-instructions`.
+Shared MCP guidance lives in `wheelhouse-rm-mcp`.
 
 ## Authentication
 
 MCP clients authenticate with **OAuth**. Sign in with your Wheelhouse account — do not paste an RM API key into chat.
 
-Cache and writeback skills (`wheelhouse-data-sync-api`, `wheelhouse-leaderboard-writeback`) use a local API key **file** on disk. Follow those skills’ setup; never paste the key into the conversation.
+Cache/sync skills (`wheelhouse-data-sync-api`, `wheelhouse-reservations-sync-api`, `wheelhouse-calendar-sync-api`, `wheelhouse-calendar-sync-api-history`) use a local API key **file** on disk. Follow those skills’ setup; never paste the key into the conversation.
 
 ## Links
 

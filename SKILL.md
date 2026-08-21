@@ -1,6 +1,6 @@
 ---
 name: wheelhouse-plugin
-description: Wheelhouse Revenue Management agent skills for the Wheelhouse MCP (mcp.usewheelhouse.com). STLY pacing, future-rate overpricing, price-change attribution, local KPI cache, portfolio leaderboards, and custom-rate interventions.
+description: Wheelhouse Revenue Management agent skills for the Wheelhouse MCP (mcp.usewheelhouse.com). STLY pacing, future-rate overpricing, price-change attribution, local data caches, and live pickup priority lists.
 metadata:
   version: "0.1.0"
   author:
@@ -18,20 +18,20 @@ Skill pack for the [Wheelhouse Revenue Management MCP](https://mcp.usewheelhouse
 1. Confirm the Wheelhouse MCP is connected (`https://mcp.usewheelhouse.com/mcp`) and authenticated via OAuth.
 2. Load `wheelhouse-rm-mcp` before portfolio analysis or preference writes.
 3. Load the matching workflow skill from the table below.
-4. For offline/cache workflows: run `wheelhouse-data-sync-api` first, then `wheelhouse-leaderboard` (optionally `wheelhouse-leaderboard-writeback`).
-
-Shared domain rules live in `wheelhouse-project-instructions`.
+4. For offline/cache workflows: run `wheelhouse-data-sync-api` first, then `wheelhouse-reservations-sync-api` and/or `wheelhouse-calendar-sync-api` as needed.
 
 ## Skills
 
 | Skill | Description |
 |-------|-------------|
 | `wheelhouse-rm-mcp` | Core MCP portfolio patterns, tool routing, and write safety |
-| `wheelhouse-project-instructions` | Shared RM domain context, lexicon, and rule hierarchy |
 | `stly-pacing` | Same-Time-Last-Year pacing analysis |
 | `future-rate-overpricing` | Flag months priced well above historical booked rates |
 | `price-change-attribution` | Attribute preference/custom-rate changes to recent bookings |
-| `custom-rate-intervention` | Write custom rates with confirmation |
+| `custom-rate-attribution` | Fast single-listing check of whether recent custom rates booked |
+| `occupancy-pickup-priority-list` | Live Top 10 of listings with low occupancy and weak pickup |
+| `fast-pickup-priority-list` | Live Top 10 of listings selling faster than the portfolio |
 | `wheelhouse-data-sync-api` | Cache listings + KPIs locally via RM API key file |
-| `wheelhouse-leaderboard` | Portfolio leaderboards from local KPI cache |
-| `wheelhouse-leaderboard-writeback` | Write leaderboard flags as Tags/Notes |
+| `wheelhouse-reservations-sync-api` | Cache reservations locally via RM API key file |
+| `wheelhouse-calendar-sync-api` | Cache future price calendars locally (replace-only) |
+| `wheelhouse-calendar-sync-api-history` | Cache future price calendars with dated snapshots |
