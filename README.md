@@ -40,21 +40,21 @@ Then install **wheelhouse-plugin** from the Codex plugins list. Manifests: `.cod
 
 Once the plugin and MCP are connected, ask your assistant things like:
 
-- How is this listing or portfolio pacing vs same time last year? → `stly-pacing`
-- Are future months overpriced vs last year’s booked rates? → `future-rate-overpricing`
-- Did a recent rate or preference change drive bookings? → `price-change-attribution`
-- Did that custom rate get booked? → `custom-rate-attribution`
-- Who needs attention / isn’t booking? → `occupancy-pickup-priority-list`
-- Which listings are selling fast? → `fast-pickup-priority-list`
-- Sync listings, KPIs, reservations, or calendars to disk → `wheelhouse-data-sync-api`, `wheelhouse-reservations-sync-api`, `wheelhouse-calendar-sync-api`
+- How is this listing or portfolio pacing vs same time last year? → `MCP-stly-pacing-calculations`
+- Are future months overpriced vs last year’s booked rates? → `MCP-future-rate-overpricing`
+- Did a recent rate or preference change drive bookings? → `MCP-price-change-attribution`
+- Did that custom rate get booked? → `MCP-custom-rate-attribution`
+- Who needs attention / isn’t booking? → `MCP-Leaderboard-Poor-Occ-Pickup`
+- Which listings are selling fast? → `MCP-Leaderboard-Fast-Seller`
+- Sync listings, KPIs, reservations, or calendars to disk → `COWORK-Listing-data-sync-api-cache`, `COWORK-reservations-sync-api-cache`, `COWORK-calendar-sync-api-cache`
 
-Shared MCP guidance lives in `wheelhouse-rm-mcp`.
+Shared MCP guidance lives in `MCP-wheelhouse-mcp-general-use-guidance`.
 
 ## Authentication
 
 MCP clients authenticate with **OAuth**. Sign in with your Wheelhouse account — do not paste an RM API key into chat.
 
-Cache/sync skills (`wheelhouse-data-sync-api`, `wheelhouse-reservations-sync-api`, `wheelhouse-calendar-sync-api`, `wheelhouse-calendar-sync-api-history`) use a local API key **file** on disk. Follow those skills’ setup; never paste the key into the conversation.
+Cache/sync skills (`COWORK-Listing-data-sync-api-cache`, `COWORK-reservations-sync-api-cache`, `COWORK-calendar-sync-api-cache`, `COWORK-calendar-history-sync-api-cache`) use a local API key **file** on disk. Follow those skills’ setup; never paste the key into the conversation.
 
 ## Links
 

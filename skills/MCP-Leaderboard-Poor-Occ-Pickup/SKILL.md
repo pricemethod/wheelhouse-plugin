@@ -1,5 +1,5 @@
 ---
-name: occupancy-pickup-priority-list
+name: MCP-Leaderboard-Poor-Occ-Pickup
 description: "Builds a live, MCP-only Top 10 (or N) list of listings most worth attention today, ranked by low near-term occupancy and low recent pickup, gated to listings that are actionable (automated pricing on, enough available nights). No cache/sync skill required -- pulls straight from the connected Wheelhouse MCP via wheelhouse_rmGetBulkListingKpis and wheelhouse_rmGetListings. Trigger on 'which listings need attention,' 'what should I prioritize today,' 'low occupancy report,' 'who's not booking,' or any Identify-stage scan wanting a live read over a cache. Then offers a one-listing live deep dive: overpriced vs. market, overpriced vs. own history (hands off to future-rate-overpricing), minimum price binding, and base rate vs. recommendation. Not for cache-based review (use wheelhouse-portfolio-priorities / wheelhouse-leaderboard) or a single named listing's pacing/overpricing check (use stly-pacing / future-rate-overpricing directly)."
 ---
 

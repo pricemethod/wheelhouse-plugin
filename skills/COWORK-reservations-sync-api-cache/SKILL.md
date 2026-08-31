@@ -1,5 +1,5 @@
 ---
-name: "wheelhouse-reservations-sync-api"
+name: COWORK-reservations-sync-api-cache
 description: "Pulls and caches Wheelhouse RM reservation data (nightly rolling sync + a one-time/periodic historical backfill, default 1 year) to local files via a direct API key and script (no MCP/Claude in the loop for the actual HTTP calls). Use this whenever the user wants to \"sync reservations,\" set up a nightly/scheduled reservations pull using their own RM API key rather than the connected MCP, wants a historical reservation backfill that costs minimal Claude usage, or explicitly asks for the \"API key version\" of the Wheelhouse reservations sync. This is a sibling to wheelhouse-reservations-sync (the MCP-orchestrated version) -- use that one instead if the user hasn't set up an API key file. Listings and KPIs are handled by the separate wheelhouse-data-sync-api skill, not this one -- this skill depends on that one having already run at least once (reads its listings.json)."
 ---
 
