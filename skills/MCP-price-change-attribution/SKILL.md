@@ -1,5 +1,5 @@
 ---
-name: price-change-attribution
+name: MCP-price-change-attribution
 description: Checks whether recent pricing changes (custom rates, seasonal/event rules, monthly rules, base price, global minimums, day-of-week, etc.) actually correlate with subsequent bookings, over a configurable 7- or 30-day lookback. Trigger for "did that price change work," "did my rate change get bookings," "check if pricing changes led to bookings," "price change impact," "did raising/lowering rates help," or any ask to review recent pricing edits against booking activity for a listing. Serves the Identify stage of Active Revenue Management — this is a post-hoc effectiveness check, distinct from stly-pacing (which compares current pace to last year, not to your own recent edits) and distinct from making a new rate change (see custom-rate-intervention workflow in project instructions §9 for that). Not for forward-looking "should I change my price" recommendations — this looks backward at changes already made.
 ---
 

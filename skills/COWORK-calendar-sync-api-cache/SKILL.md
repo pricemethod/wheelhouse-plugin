@@ -1,5 +1,5 @@
 ---
-name: wheelhouse-calendar-sync-api
+name: COWORK-calendar-sync-api-cache
 description: "Pulls each listing's future price calendar (price, availability, booked/blocked state per date) from Wheelhouse RM and caches it to local files via a direct API key and script -- no MCP/Claude in the loop for the HTTP calls -- so other Wheelhouse skills can read a listing's calendar from disk instead of calling the live API every time. SIMPLE version: each nightly run fully replaces the cached calendar for every listing, no history kept. Use when the user wants to \"sync,\" \"cache,\" \"refresh,\" or \"pull down\" Wheelhouse calendar/availability data with their own RM API key, wants a cheap nightly/scheduled calendar pull, or asks for the \"simple\"/\"replace-only\" calendar sync. Sibling to wheelhouse-calendar-sync-api-history (which snapshots every pull for history -- use that one if the user wants a past date's calendar, not just current). Also sibling to wheelhouse-data-sync-api (listings+KPIs) and wheelhouse-reservations-sync-api (bookings) -- this one is calendar/availability only."
 ---
 

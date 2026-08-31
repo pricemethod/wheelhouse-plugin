@@ -1,5 +1,5 @@
 ---
-name: stly-pacing
+name: MCP-stly-pacing-calculations
 description: Runs a Same-Time-Last-Year (STLY) pacing analysis — Nights Booked, Revenue, ADR, and Occupancy (adjusted and unadjusted) vs. the on-the-books position one year ago — for a listing or saved Wheelhouse segment, over any date range (months, a rolling day count, a named period, or explicit dates). Produces a pace signal (ADR x Occupancy vs. STLY) with booking-window-aware interpretation, serving the Identify stage of Active Revenue Management. Trigger for any "pacing," "pickup," or "pace report" ask, comparisons to "last year" / "STLY" / "on the books," pacing charts/tables, or segment booking-trend reviews — even without the word "pacing" ("how does this month look vs last June"). Also trigger for single-KPI asks like "ADR pacing," "booked nights pacing," "revenue pacing," or "occupancy pacing" vs. last year — these need on-the-books STLY comparison, not a rolling-window KPI lookup. Not for forward-looking calendar checks, or when only final last-year actuals are wanted.
 ---
 

@@ -1,5 +1,5 @@
 ---
-name: future-rate-overpricing
+name: MCP-future-rate-overpricing
 description: Checks whether a listing's future posted rates are too high (or too low) vs. what actually transacted the same calendar month last year, broken out by month and by weekend (Fri/Sat) vs. weekday (Sun-Thu). Trigger for "are my future rates too high," "check for overpricing next season," "is [listing] priced too aggressively for [month]," "which months are overpriced," "future rate health check," or any forward-looking ask about posted rates being out of line with historical demand. Serves the Identify stage of Active Revenue Management — distinct from stly-pacing (on-the-books pace vs. last year, not posted vs. transacted rate) and price-change-attribution (backward-looking — did an edit already made lead to bookings). Not for writing a new rate — this only flags risk; any resulting write goes through custom-rate-intervention (project instructions §9).
 ---
 

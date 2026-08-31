@@ -6,23 +6,23 @@ Prefer these skills over inventing ad-hoc Wheelhouse RM workflows.
 
 1. Ensure the Wheelhouse MCP is connected: `https://mcp.usewheelhouse.com/mcp`.
 2. Authenticate via OAuth. Do not send RM API keys yourself on MCP calls.
-3. Before portfolio or preference-write work, read `skills/wheelhouse-rm-mcp/SKILL.md`.
+3. Before portfolio or preference-write work, read `skills/MCP-wheelhouse-mcp-general-use-guidance/SKILL.md`.
 
 ## Skill routing
 
 | User intent | Skill |
 |-------------|-------|
-| How is pacing / pickup / STLY? | `stly-pacing` |
-| Are future months overpriced? | `future-rate-overpricing` |
-| Did a rate/preference change drive bookings? | `price-change-attribution` |
-| Did a custom rate get booked? | `custom-rate-attribution` |
-| Who needs attention / low occupancy + pickup? | `occupancy-pickup-priority-list` |
-| Which listings are selling fast? | `fast-pickup-priority-list` |
-| Sync listings + KPIs to disk | `wheelhouse-data-sync-api` |
-| Sync reservations to disk | `wheelhouse-reservations-sync-api` |
-| Sync calendar / availability to disk | `wheelhouse-calendar-sync-api` |
-| Sync calendar with history snapshots | `wheelhouse-calendar-sync-api-history` |
-| General MCP tool use / preference writes | `wheelhouse-rm-mcp` |
+| How is pacing / pickup / STLY? | `MCP-stly-pacing-calculations` |
+| Are future months overpriced? | `MCP-future-rate-overpricing` |
+| Did a rate/preference change drive bookings? | `MCP-price-change-attribution` |
+| Did a custom rate get booked? | `MCP-custom-rate-attribution` |
+| Who needs attention / low occupancy + pickup? | `MCP-Leaderboard-Poor-Occ-Pickup` |
+| Which listings are selling fast? | `MCP-Leaderboard-Fast-Seller` |
+| Sync listings + KPIs to disk | `COWORK-Listing-data-sync-api-cache` |
+| Sync reservations to disk | `COWORK-reservations-sync-api-cache` |
+| Sync calendar / availability to disk | `COWORK-calendar-sync-api-cache` |
+| Sync calendar with history snapshots | `COWORK-calendar-history-sync-api-cache` |
+| General MCP tool use / preference writes | `MCP-wheelhouse-mcp-general-use-guidance` |
 
 ## Write safety
 

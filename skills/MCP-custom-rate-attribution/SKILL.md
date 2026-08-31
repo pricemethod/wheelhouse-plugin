@@ -1,5 +1,5 @@
 ---
-name: custom-rate-attribution
+name: MCP-custom-rate-attribution
 description: Fast, single-listing check of whether Custom Rates set in the last 30 days actually got booked — the simple, custom-rates-only sibling to price-change-attribution. Trigger for "did that custom rate get booked," "check if my custom rate led to bookings," "did the rate I set on [listing] work," "did Zachary's rate change book," or any quick post-hoc check specifically about Custom Rates (not base price, seasonality, monthly, day-of-week, or global rules — those go through price-change-attribution instead). Fixed 30-day lookback, one listing at a time, reports hits only — no no-impact table, no pace-trend bucket. Use price-change-attribution instead when the user wants broader rule-type coverage, a configurable 7-/30-day window, or wants to see the misses too. Serves the Identify stage of Active Revenue Management.
 ---
 

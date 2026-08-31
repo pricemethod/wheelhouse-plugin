@@ -1,5 +1,5 @@
 ---
-name: fast-pickup-priority-list
+name: MCP-Leaderboard-Fast-Seller
 description: "Builds a live, MCP-only Top 10 of listings selling much faster than the rest of the portfolio -- pickup in the last 14 days as a share of the next 60 days' bookable inventory -- with each listing's neighborhood-occupancy-ratio shown as context, not blended into the score. Trigger on 'which listings are selling fast,' 'who's picking up quickly,' 'fastest-moving listings,' 'outpacing the market,' or any Identify-stage scan about booking velocity. Sibling to occupancy-pickup-priority-list (underperformers) -- this is the opposite signal. Offers two next steps: (1) hand off to price-change-attribution to check if a recent price/rule change, not organic demand, explains the surge; (2) a granular neighborhood-occupancy scan of this listing's unbooked nights ranked by demand -- 'opportunity days' worth a rate push. Not for one named listing's pacing (stly-pacing) or the low-occupancy list (occupancy-pickup-priority-list)."
 ---
 

@@ -1,5 +1,5 @@
 ---
-name: wheelhouse-data-sync-api
+name: COWORK-Listing-data-sync-api-cache
 description: "Pulls and caches Wheelhouse RM listings and KPIs (rolling + monthly) to local files via a direct API key and script (no MCP/Claude in the loop for the actual HTTP calls), so other Wheelhouse skills can read from disk instead of calling the live API through the model. Use this whenever the user wants to \"sync,\" \"cache,\" \"refresh,\" or \"pull down\" Wheelhouse listings/KPIs using their own RM API key rather than the connected MCP, wants a nightly/scheduled listings+KPI pull that costs minimal Claude usage, or explicitly asks for the \"API key version\" / \"direct API version\" of the Wheelhouse sync. This is a sibling to wheelhouse-data-sync (the MCP-orchestrated version) -- use that one instead if the user hasn't set up an API key file or wants Claude to reason over each call. Reservations are handled by the separate wheelhouse-reservations-sync-api skill, not this one."
 ---
 

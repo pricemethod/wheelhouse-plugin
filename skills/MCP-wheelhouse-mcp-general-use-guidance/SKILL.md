@@ -1,5 +1,5 @@
 ---
-name: wheelhouse-rm-mcp
+name: MCP-wheelhouse-mcp-general-use-guidance
 description: Guides agents using the Wheelhouse Revenue Management MCP server. Use when answering portfolio pricing, pacing, occupancy, comp-set, preference, or base-rate questions via wheelhouse_rm_* tools — especially multi-listing analysis, preference writes, and rule configuration.
 ---
 
