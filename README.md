@@ -36,6 +36,29 @@ codex plugin marketplace add pricemethod/wheelhouse-plugin
 
 Then install **wheelhouse-plugin** from the Codex plugins list. Manifests: `.codex-plugin/plugin.json`, `.agents/plugins/marketplace.json`.
 
+### ChatGPT (workspace admin)
+
+Requires a ChatGPT Enterprise/Edu workspace. In **Workspace settings → Plugins → Add → Import marketplace**:
+
+- **Source:** `https://github.com/pricemethod/wheelhouse-plugin`
+- **Path:** leave empty — the manifest lives at the repo root (`.agents/plugins/marketplace.json`)
+
+Use a GitHub account with read access to the repo. New imports sync daily; use **Sync now** to pick up changes immediately. See [Importing and syncing plugin marketplaces from GitHub](https://help.openai.com/en/articles/20001504-importing-and-syncing-plugin-marketplaces-from-github).
+
+### Grok Build
+
+```bash
+grok plugin marketplace add pricemethod/wheelhouse-plugin
+```
+
+Then install **wheelhouse-plugin** from the `/marketplace` tab, or install directly:
+
+```bash
+grok plugin install pricemethod/wheelhouse-plugin --trust
+```
+
+`--trust` activates the plugin's skills; without it, the plugin installs but stays inert.
+
 ## What you can ask
 
 Once the plugin and MCP are connected, ask your assistant things like:
