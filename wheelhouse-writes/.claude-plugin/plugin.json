@@ -1,0 +1,21 @@
+{
+  "name": "wheelhouse-writes",
+  "version": "0.2.8",
+  "description": "Write-capable Wheelhouse RM guidance: preferences/rule hierarchy, Events & Seasons ID resolution, and Custom Rates, each as an MCP-orchestrated (interactive, confirm-before-write) skill and a direct-API (dry-run/--apply) skill, plus a PriceLabs terminology/capability migration reference for clients building on the API from another pricing tool.",
+  "author": {
+    "name": "Wheelhouse",
+    "email": "support@usewheelhouse.com"
+  },
+  "repository": "https://github.com/pricemethod/wheelhouse-plugin",
+  "license": "Apache-2.0",
+  "keywords": [
+    "wheelhouse",
+    "revenue management",
+    "pricing",
+    "preferences",
+    "custom rates",
+    "seasons",
+    "pricelabs",
+    "migration"
+  ]
+}

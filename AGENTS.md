@@ -2,6 +2,8 @@
 
 Prefer these skills over inventing ad-hoc Wheelhouse RM workflows.
 
+This guide covers **wheelhouse-plugin** (read-only: pacing, diagnostics, leaderboards, data-sync caches). Write-capable workflows — preferences, Events & Seasons, Custom Rates, PriceLabs migration — live in the companion **wheelhouse-writes** plugin (`wheelhouse-writes/`), kept separate deliberately so read access and write access stay two distinct installs. If `wheelhouse-writes` is installed, route any preference/rule/custom-rate/season write request to its skills (`Context-Preferences`, `Context-Events&Seasons`, `Context-CustomRates`, and their `-API` siblings) rather than improvising a write here.
+
 ## MCP first
 
 1. Ensure the Wheelhouse MCP is connected: `https://mcp.usewheelhouse.com/mcp`.
@@ -18,10 +20,10 @@ Prefer these skills over inventing ad-hoc Wheelhouse RM workflows.
 | Did a custom rate get booked? | `MCP-custom-rate-attribution` |
 | Who needs attention / low occupancy + pickup? | `MCP-Leaderboard-Poor-Occ-Pickup` |
 | Which listings are selling fast? | `MCP-Leaderboard-Fast-Seller` |
-| Sync listings + KPIs to disk | `COWORK-Listing-data-sync-api-cache` |
-| Sync reservations to disk | `COWORK-reservations-sync-api-cache` |
-| Sync calendar / availability to disk | `COWORK-calendar-sync-api-cache` |
-| Sync calendar with history snapshots | `COWORK-calendar-history-sync-api-cache` |
+| Sync listings + KPIs to disk | `COWORK-Data-Syncs` (Listings+KPIs mode) |
+| Sync reservations to disk | `COWORK-Data-Syncs` (Reservations mode) |
+| Sync calendar / availability to disk | `COWORK-Data-Syncs` (Calendar simple mode) |
+| Sync calendar with history snapshots | `COWORK-Data-Syncs` (Calendar history mode) |
 | General MCP tool use / preference writes | `MCP-wheelhouse-mcp-general-use-guidance` |
 
 ## Write safety
