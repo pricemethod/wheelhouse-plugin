@@ -18,7 +18,7 @@ Skill pack for the [Wheelhouse Revenue Management MCP](https://mcp.usewheelhouse
 1. Confirm the Wheelhouse MCP is connected (`https://mcp.usewheelhouse.com/mcp`) and authenticated via OAuth.
 2. Load `MCP-wheelhouse-mcp-general-use-guidance` before portfolio analysis or preference writes.
 3. Load the matching workflow skill from the table below.
-4. For offline/cache workflows: run `COWORK-Listing-data-sync-api-cache` first, then `COWORK-reservations-sync-api-cache` and/or `COWORK-calendar-sync-api-cache` as needed.
+4. For offline/cache workflows: load `COWORK-Data-Syncs` and run its Listings + KPIs mode first, then the Reservations and/or Calendar mode(s) as needed.
 
 ## Skills
 
@@ -31,7 +31,4 @@ Skill pack for the [Wheelhouse Revenue Management MCP](https://mcp.usewheelhouse
 | `MCP-custom-rate-attribution` | Fast single-listing check of whether recent custom rates booked |
 | `MCP-Leaderboard-Poor-Occ-Pickup` | Live Top 10 of listings with low occupancy and weak pickup |
 | `MCP-Leaderboard-Fast-Seller` | Live Top 10 of listings selling faster than the portfolio |
-| `COWORK-Listing-data-sync-api-cache` | Cache listings + KPIs locally via RM API key file |
-| `COWORK-reservations-sync-api-cache` | Cache reservations locally via RM API key file |
-| `COWORK-calendar-sync-api-cache` | Cache future price calendars locally (replace-only) |
-| `COWORK-calendar-history-sync-api-cache` | Cache future price calendars with dated snapshots |
+| `COWORK-Data-Syncs` | Cache listings+KPIs, reservations, and future price calendars (replace-only or dated-history) locally via RM API key file |

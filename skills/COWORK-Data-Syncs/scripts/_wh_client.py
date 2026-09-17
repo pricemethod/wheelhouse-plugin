@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Minimal shared HTTP client for the Wheelhouse RM API (direct, no MCP/Claude
-in the loop). Used by sync_calendar.py in this skill.
+in the loop). Used by all four sync scripts in this skill: sync_listings_kpis.py,
+sync_reservations.py, sync_calendar.py, and sync_calendar_history.py.
 
 Why this exists: doing bulk portfolio syncs by having an LLM call an MCP tool
 once per listing per data type is enormously more expensive in Claude usage
@@ -10,10 +11,6 @@ read, and reason about every single response just to decide "write this to
 disk." A script does the identical HTTP calls and file writes without any of
 that per-record reasoning cost. Claude's job becomes: run this script once,
 read its short summary. That's the entire point of this file's existence.
-
-This is a copy of the sibling wheelhouse-data-sync-api / wheelhouse-
-reservations-sync-api skills' _wh_client.py, duplicated here (not imported
-cross-skill) so this skill stays self-contained and installable on its own.
 
 Auth: reads the API key from a file path (never accept it as a literal
 argument or environment value typed in a chat message -- the user creates the
@@ -28,7 +25,20 @@ and pagination (page 1-based or offset 0-based -- never both -- per_page up
 to 100, stop when a page returns fewer than per_page) are all confirmed
 directly against that same live reference. /listings and its query params
 (exclude_inactive default true, include_managed_listings default false) are
-confirmed too.
+confirmed too, as are /listings/{listing_id}/kpis and
+/listings/{listing_id}/kpis/monthly (channel required as a query param
+alongside listing_id as a path param, matching every other listing-scoped
+endpoint in the spec with zero exceptions found).
+
+/listings/{listing_id}/reservations is the one path in this file that's
+high-confidence-but-not-directly-quoted: the API doc's "Reservations" section
+didn't render during verification (a rendering gap, not an ambiguity in the
+API itself), but every other listing-scoped endpoint follows the identical
+/listings/{listing_id}/{resource}?channel=... pattern with no exceptions, and
+the connected Wheelhouse MCP's generated tool schema (built from this same
+spec) requires the identical listing_id+channel shape. Run --selftest before
+a full sync regardless -- it'll catch a wrong path fast and cheaply if this
+one turns out to be the exception.
 
 /listings/{listing_id}/price_calendar -- confirmed directly against the
 connected Wheelhouse MCP's live tool schema and a real test call against a
@@ -130,7 +140,9 @@ class WheelhouseClient:
                 if e.code == 404:
                     raise RuntimeError(
                         f"404 Not Found on {url} -- likely an incorrect endpoint path. "
-                        f"Body: {body_text}"
+                        f"This is the most likely failure mode for this script since some "
+                        f"paths were inferred rather than confirmed -- see this file's "
+                        f"module docstring. Body: {body_text}"
                     )
                 if e.code == 422:
                     raise RuntimeError(f"422 Unprocessable Entity on {url}: {body_text}")
