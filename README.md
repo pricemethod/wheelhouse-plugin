@@ -6,10 +6,12 @@ This marketplace publishes two companion plugins, kept separate deliberately so 
 
 | Plugin | Source | What it covers |
 |---|---|---|
-| **wheelhouse-plugin** | `./` | Read-only: portfolio pacing, pricing diagnostics, leaderboards, and local data-sync/caches |
+| **wheelhouse-skills** | `./wheelhouse-skills` | Read-only: portfolio pacing, pricing diagnostics, leaderboards, and local data-sync/caches |
 | **wheelhouse-writes** | `./wheelhouse-writes` | Write-capable: preferences/rule hierarchy, Events & Seasons, Custom Rates — each as an interactive MCP skill and a dry-run/`--apply` direct-API sibling, plus a PriceLabs migration reference |
 
 Install either or both independently — installing one does not require or imply the other.
+
+> **Renamed:** the read-only plugin was previously published as `wheelhouse-plugin` — the same name as this marketplace, which was ambiguous and caused install confusion for some clients. It's now `wheelhouse-skills`. If you already installed it under the old name, reinstall: remove `wheelhouse-plugin@wheelhouse-plugin` and install `wheelhouse-skills@wheelhouse-plugin` (or your client's equivalent).
 
 ## Prerequisites
 
@@ -26,7 +28,7 @@ Full client-by-client steps: [docs.usewheelhouse.com/rm/wheelhouse-plugin](https
 cursor-agent plugin marketplace add https://github.com/pricemethod/wheelhouse-plugin
 ```
 
-Then install **wheelhouse-plugin** and/or **wheelhouse-writes** from **Customize**. Teams and Enterprise can also import the repo under **Dashboard → Plugins**.
+Then install **wheelhouse-skills** and/or **wheelhouse-writes** from **Customize**. Teams and Enterprise can also import the repo under **Dashboard → Plugins**.
 
 Skills under each plugin's own `skills/` directory are discovered automatically.
 
@@ -34,7 +36,7 @@ Skills under each plugin's own `skills/` directory are discovered automatically.
 
 ```text
 /plugin marketplace add pricemethod/wheelhouse-plugin
-/plugin install wheelhouse-plugin@wheelhouse-plugin
+/plugin install wheelhouse-skills@wheelhouse-plugin
 /plugin install wheelhouse-writes@wheelhouse-plugin
 ```
 
@@ -44,7 +46,7 @@ Skills under each plugin's own `skills/` directory are discovered automatically.
 codex plugin marketplace add pricemethod/wheelhouse-plugin
 ```
 
-Then install **wheelhouse-plugin** and/or **wheelhouse-writes** from the Codex plugins list. Manifests: `.codex-plugin/plugin.json` (and `wheelhouse-writes/.codex-plugin/plugin.json`), `.agents/plugins/marketplace.json`.
+Then install **wheelhouse-skills** and/or **wheelhouse-writes** from the Codex plugins list. Manifests: `wheelhouse-skills/.codex-plugin/plugin.json` (and `wheelhouse-writes/.codex-plugin/plugin.json`), `.agents/plugins/marketplace.json`.
 
 ### ChatGPT (workspace admin)
 
@@ -61,7 +63,7 @@ Use a GitHub account with read access to the repo. New imports sync daily; use *
 grok plugin marketplace add pricemethod/wheelhouse-plugin
 ```
 
-Then install **wheelhouse-plugin** and/or **wheelhouse-writes** from the `/marketplace` tab, or install directly:
+Then install **wheelhouse-skills** and/or **wheelhouse-writes** from the `/marketplace` tab, or install directly:
 
 ```bash
 grok plugin install pricemethod/wheelhouse-plugin --trust
@@ -94,7 +96,7 @@ With **wheelhouse-writes** installed, you can also ask things like:
 
 MCP clients authenticate with **OAuth**. Sign in with your Wheelhouse account — do not paste an RM API key into chat. This applies to both plugins' MCP-orchestrated skills.
 
-The `COWORK-Data-Syncs` skill (in **wheelhouse-plugin**) and the `-API` skills (in **wheelhouse-writes**) use a local API key **file** on disk instead of OAuth for unattended/scripted runs. Follow each skill's own setup; never paste the key into the conversation. The `-API` write skills are dry-run by default — they only write with an explicit `--apply` flag after you review the printed diff.
+The `COWORK-Data-Syncs` skill (in **wheelhouse-skills**) and the `-API` skills (in **wheelhouse-writes**) use a local API key **file** on disk instead of OAuth for unattended/scripted runs. Follow each skill's own setup; never paste the key into the conversation. The `-API` write skills are dry-run by default — they only write with an explicit `--apply` flag after you review the printed diff.
 
 ## Links
 
@@ -103,4 +105,4 @@ The `COWORK-Data-Syncs` skill (in **wheelhouse-plugin**) and the `-API` skills (
 - API reference: https://api.usewheelhouse.com/wheelhouse_rm_api
 - License: [Apache License 2.0](LICENSE)
 
-Contributors: see [AGENTS.md](AGENTS.md), `skills/` (wheelhouse-plugin), and `wheelhouse-writes/skills/` (wheelhouse-writes).
+Contributors: see [AGENTS.md](AGENTS.md), `wheelhouse-skills/skills/` (wheelhouse-skills), and `wheelhouse-writes/skills/` (wheelhouse-writes).
