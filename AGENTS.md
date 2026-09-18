@@ -2,7 +2,7 @@
 
 Prefer these skills over inventing ad-hoc Wheelhouse RM workflows.
 
-This guide covers **wheelhouse-plugin** (read-only: pacing, diagnostics, leaderboards, data-sync caches). Write-capable workflows — preferences, Events & Seasons, Custom Rates, PriceLabs migration — live in the companion **wheelhouse-writes** plugin (`wheelhouse-writes/`), kept separate deliberately so read access and write access stay two distinct installs. If `wheelhouse-writes` is installed, route any preference/rule/custom-rate/season write request to its skills (`Context-Preferences`, `Context-Events&Seasons`, `Context-CustomRates`, and their `-API` siblings) rather than improvising a write here.
+This guide covers **wheelhouse-skills** (read-only: pacing, diagnostics, leaderboards, data-sync caches). Write-capable workflows — preferences, Events & Seasons, Custom Rates, PriceLabs migration — live in the companion **wheelhouse-writes** plugin (`wheelhouse-writes/`), kept separate deliberately so read access and write access stay two distinct installs. If `wheelhouse-writes` is installed, route any preference/rule/custom-rate/season write request to its skills (`Context-Preferences`, `Context-Events&Seasons`, `Context-CustomRates`, and their `-API` siblings) rather than improvising a write here.
 
 ## MCP first
 

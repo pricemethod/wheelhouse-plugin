@@ -1,6 +1,6 @@
 # Wheelhouse Writes
 
-Write-capable guidance for the Wheelhouse Revenue Management API/MCP: the procedural knowledge needed to make changes safely, not just read data. Companion to the read-only `wheelhouse-plugin` (sync/cache/leaderboard skills) — kept as a separate plugin deliberately, so a client's decision to let Claude *read* their Wheelhouse data and their decision to let Claude *write* to it stay two distinct choices.
+Write-capable guidance for the Wheelhouse Revenue Management API/MCP: the procedural knowledge needed to make changes safely, not just read data. Companion to the read-only `wheelhouse-skills` (sync/cache/leaderboard skills) — kept as a separate plugin deliberately, so a client's decision to let Claude *read* their Wheelhouse data and their decision to let Claude *write* to it stay two distinct choices.
 
 ## What's in this plugin
 

@@ -1,15 +1,15 @@
 ---
-name: wheelhouse-plugin
+name: wheelhouse-skills
 description: Wheelhouse Revenue Management agent skills for the Wheelhouse MCP (mcp.usewheelhouse.com). STLY pacing, future-rate overpricing, price-change attribution, local data caches, and live pickup priority lists.
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
   author:
     name: Wheelhouse
     email: support@usewheelhouse.com
   tags: wheelhouse,mcp,revenue-management,pricing,hospitality
 ---
 
-# Wheelhouse Plugin — Agent Skills
+# Wheelhouse Skills — Agent Skills
 
 Skill pack for the [Wheelhouse Revenue Management MCP](https://mcp.usewheelhouse.com/mcp). Prefer these skills over inventing ad-hoc RM workflows.
 
