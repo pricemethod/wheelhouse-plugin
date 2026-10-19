@@ -8,9 +8,19 @@
 
 There are no structured old/new-value fields. Everything actionable is in `msg`, an HTML string. Parsing is line-by-line, not event-by-event.
 
-## Step 0 — Drop noise events
+## Step 0 — Filter by `event`
 
-Discard any event where `source == "Wheelhouse"` (these are `event: "Prices posted"` sync confirmations — no preference content, just confirm a sync ran).
+Filter on the `event` field, not `source`. Known `event` values and how to route them:
+
+| `event` | Route |
+|---|---|
+| `"Settings changed"` | Attribution — parse `msg` per Steps 1-4 |
+| `"Custom rates"` | Attribution — parse `msg` per Steps 1-4 (see Step 3 for line rules) |
+| `"Prices posted"` | Not an attribution event (channel sync record) — set aside, don't parse as a change |
+| `"Calendar synced"` | Not an attribution event (channel sync record) — set aside, don't parse as a change |
+| `"Reservations imported"` | Drop |
+
+Don't use `source == "Wheelhouse"` as a filter. `"Wheelhouse"` is system-generated activity in general (auto price posting, but also internal adjustments and migrations that do change settings), and reservation imports carry `source: "Wheelhouse team"`, so a source filter would drop real setting changes and let `Reservations imported` events through as junk "unclassified" lines. Keep `source` only as a display value for who made each change (User / API / Customer Support / Wheelhouse).
 
 ## Step 1 — Split into lines
 

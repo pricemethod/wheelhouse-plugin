@@ -6,9 +6,9 @@ No Claude/MCP calls in the loop -- see _wh_client.py's docstring for why.
 This pulls each listing's FUTURE price calendar (today forward) and fully
 REPLACES the on-disk file for that listing every run. It keeps no history of
 past pulls -- if you want a dated archive of every night's calendar as it
-looked when pulled, use the sibling wheelhouse-calendar-sync-api-history
-skill instead (different skill folder, different default --out, so the two
-can run side by side without colliding).
+looked when pulled, use the sibling sync_calendar_history.py (COWORK-Data-Syncs'
+calendar-history mode) instead, with a different --out, so the two
+can run side by side without colliding.
 
 Usage:
   python3 sync_calendar.py --api-key-file /path/to/key.txt --out /path/to/wheelhouse_calendar_data
@@ -17,7 +17,7 @@ Usage:
 --selftest fetches one listing (via next() on a per_page=1 paginated
 generator -- never materializes a full listings page, so it stays fast
 regardless of portfolio size, mirroring the fix already applied to the
-sibling wheelhouse-data-sync-api skill) plus one short (7-day) price_calendar
+sibling sync_listings_kpis.py) plus one short (7-day) price_calendar
 call for it -- 2 calls total. Run this before a full sync the first time, or
 after any Wheelhouse API change.
 
@@ -44,7 +44,7 @@ Output layout (all under --out):
   index.json                    -- sync metadata
 
 Same-day resume, cross-day always-refresh (same fix already verified
-end-to-end on the sibling wheelhouse-data-sync-api skill's KPI sync, applied
+end-to-end on the sibling sync_listings_kpis.py KPI sync, applied
 here identically): a nightly sync must always pull every listing's current
 calendar, never silently skip one just because a same-named file already
 exists from a previous night -- but a truncated run shouldn't have to
@@ -65,7 +65,7 @@ Multi-unit listings: price_calendar returns one row per unit per date for
 multi-unit listings (unit_number 0 for single-unit listings). This script
 stores the raw returned rows as-is in one file per listing -- it does not
 split by unit_number on write. Consuming skills should group by unit_number
-when reading, per the project's general multi-unit guidance, rather than
+when reading, rather than
 assuming one row per date.
 """
 import argparse

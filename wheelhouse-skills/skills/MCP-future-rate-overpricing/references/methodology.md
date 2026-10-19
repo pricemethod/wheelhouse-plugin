@@ -16,7 +16,11 @@ This is a deliberate approximation — the endpoint doesn't expose true intra-st
 
 ## Historical occupancy (Step 2)
 
-`Occupancy (Adjusted) = Nights(Booked) ÷ Nights(Bookable)` for the bucket, using the count of WE or WD nights actually booked (from the reservations pulled above) against the count of WE or WD calendar nights available in that month (excluding owner-blocked nights if that data is available; otherwise total calendar nights for the bucket is an acceptable fallback — note which one was used in output).
+`Occupancy (Adjusted) = Nights(Booked) ÷ Nights(Bookable)` for the bucket, using the count of WE or WD nights actually booked (from the reservations pulled above) against the count of WE or WD calendar nights available in that month, excluding owner-blocked nights. The blocked count comes from the prior-year rows of Step 1's widened `wheelhouse_rmGetPriceCalendar` call (`is_available: false` AND `is_booked: false`; past dates report the state they ended up in), so it costs no extra call. Fall back to total calendar nights for the bucket only as a last resort (e.g. the calendar returned no prior-year rows) — note which one was used in output.
+
+## Posted-vs-posted (Step 6)
+
+LY posted rate per bucket = average `last_posted_price` from `wheelhouse_rmGetLastPostedPrices` over the bucket's LY nights (nulls and Step 3 exclusions dropped, grouped by `unit_number` for multi-unit listings). Don't substitute the price calendar's past-date `price`: for booked or blocked nights that's the transacted price, which would make this signal a near-duplicate of the LY ADR headline rather than a read on posting posture.
 
 ## Confidence weighting matrix (Step 5)
 
@@ -30,7 +34,7 @@ This is a deliberate approximation — the endpoint doesn't expose true intra-st
 
 These thresholds (50%/70%) are starting points, not hard-coded constants — treat them the same way the pace-signal-guide treats its bands, and revisit if a listing's own historical occupancy distribution suggests different natural breakpoints.
 
-## Worked example (validated against real data — The Luzianne, listing 3995218, rentalsunited)
+## Worked example (validated against real data from a `rentalsunited`-channel listing)
 
 This is the actual dry-run result that validated the design, kept here as a reference case for what correct output looks like, including a genuine market/headline disagreement.
 
@@ -49,5 +53,6 @@ This is the actual dry-run result that validated the design, kept here as a refe
 
 **Market cross-check (Step 7, triggered because both buckets flagged):**
 - `GetNeighborhoodPricing` for the same November dates showed a neighborhood median around $331 (WD) and $403 (WE) — meaning the future Asking Rate is actually **at or below** the neighborhood median, not above it.
+- **Caveat on this example:** this dry run compared the rent-only Asking Rate directly with fee-inclusive neighborhood prices, before the `fee_multiplier` step was added to Step 7. The correct comparison is `$159.50 × fee_multiplier` and `$330 × fee_multiplier` vs. those medians, so the gap to market was smaller than shown (the WE bucket in particular may land at or above the $403 median, depending on the multiplier). The multiplier wasn't captured, so treat the "below median" read as approximate.
 
 **Read:** The headline ADR-based signal says heavily overpriced; the market check says priced under the neighborhood median. This is not a contradiction to resolve away — it's the intended output of Phase 2. Here the disagreement points toward the *historical* side being the less reliable baseline (this listing had under 12 months of operating history at the time, and its first-year pricing likely reflected new-listing ramp-up discounting — see `exclusion-and-edge-cases.md` for the tenure guard that would flag this in future runs). Report both signals plainly and let the disagreement itself be part of the takeaway, rather than picking one to lead with.

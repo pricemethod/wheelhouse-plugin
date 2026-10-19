@@ -18,13 +18,13 @@ Guidance for Wheelhouse Custom Rates: date-range price overrides that sit on top
 - `wheelhouse_rmDeleteCustomRate(listing_id, channel, start_date, end_date)` — removes rates overlapping the range; truncates or splits a rate that only partially overlaps.
 - `wheelhouse_rmBulkDeleteCustomRates(listing_id, channel, delete_ranges[])` — multiple date-range deletions in one request, single listing. `207`/`424` semantics match the bulk-put tool. **Live-tested 2026-09-15**: cleanly removed the two test rates above with a single call; the listing's rates reverted to exactly the pre-test state on the next read. **Confirmed response:** empty body on success (not a JSON object) — don't expect a parseable payload back from this call.
 
-All four write/delete tools carry their own mandatory confirmation requirement baked directly into the live tool description — this section restates it because it's central to this skill, but always re-read the live tool description before calling, since it may be updated with more specifics than captured here.
+The two PUT tools (`wheelhouse_rmPutCustomRate`, `wheelhouse_rmBulkPutCustomRates`) carry a mandatory confirmation block (plus Steps 1–4) in their live tool descriptions — this skill restates it below because it's central here. **The two DELETE tools (`wheelhouse_rmDeleteCustomRate`, `wheelhouse_rmBulkDeleteCustomRates`) do not** — their live descriptions contain only the truncate/split behavior — so this skill enforces the confirmation gate for deletions itself (see "Deletion behavior"). Always re-read the live tool descriptions before calling, since they may be updated with more specifics than captured here.
 
 ## `fixed` vs. `adjustment` — verified field shapes
 
 `wheelhouse_rmPutCustomRate` required fields: `listing_id`, `channel`, `start_date`, `end_date`, `rate_type` (`"fixed"` or `"adjustment"`). Optional: `currency`, `sunday`–`saturday` (per-weekday integer values, minimum 1), `expires_at`.
 
-- **`fixed`**: an absolute nightly price. **Requires `currency`.** Per-day values are absolute prices in that currency. Bypasses `minimum_price_rules_v3` entirely — constrained only by `min_min_price` (the account-wide absolute floor).
+- **`fixed`**: an absolute nightly price. **Requires `currency`.** Per-day values are absolute prices in that currency. Bypasses `minimum_price_rules_v3` entirely — constrained only by `min_min_price` (the listing-level absolute floor; UI: "Absolute minimum price").
 - **`adjustment`**: a percentage multiplier on the Wheelhouse recommendation. Per-day values are percentages where **100 = no adjustment, 110 = +10%, 90 = −10%**. Additionally constrained by per-date `minimum_price_rules_v3` floors (unlike `fixed`, which bypasses them).
 
 **Read-side tense mismatch:** when reading prices via price-recommendation endpoints, an `adjustment`-type custom rate appears as `custom_type: "adjusted"` (past tense). Reconcile this explicitly when comparing what was written (`rate_type: "adjustment"`) against what's read back (`custom_type: "adjusted"`) — they're the same thing under different field names at different points in the tense.
@@ -33,7 +33,7 @@ All four write/delete tools carry their own mandatory confirmation requirement b
 
 If a new date range overlaps an existing custom rate, **the existing rate is shortened, split, or fully replaced** so the new rate wins for the overlapping dates. This happens automatically and silently on write — there is no separate "are you sure" from the API itself beyond the tool's own confirmation requirement. Custom rates are **never additive by default**: a new `adjustment` rate does not compound with an existing one just because the date ranges overlap.
 
-## Combining values — the mandatory protocol (verified from the live tool description, matches project instructions §10)
+## Combining values — the mandatory protocol (verified from the live tool description)
 
 **Step 1 — Check for an existing rate first.** Before writing any rate for a listing/date range, call `wheelhouse_rmGetCustomRates` and check for an overlapping existing rate. Do not assume intent based on whether one exists.
 
@@ -52,7 +52,9 @@ These two formulas are opposite operations — do not apply the `adjustment` mat
 
 ## Deletion behavior
 
-`wheelhouse_rmDeleteCustomRate`/`BulkDeleteCustomRates` remove all custom rates overlapping the given range(s). If a rate period extends beyond the deleted range on one side only, it's truncated to the non-overlapping portion. If the deleted range falls in the middle of an existing period, that period is **split into two** — before and after the deleted range. Deleted dates revert to the Wheelhouse recommended price (not to zero, not to a blank state). Confirm this outcome with the client before deleting, especially for a mid-period deletion that will produce two separate remaining rate periods where there was one.
+`wheelhouse_rmDeleteCustomRate`/`BulkDeleteCustomRates` remove all custom rates overlapping the given range(s). If a rate period extends beyond the deleted range on one side only, it's truncated to the non-overlapping portion. If the deleted range falls in the middle of an existing period, that period is **split into two** — before and after the deleted range. Deleted dates revert to the Wheelhouse recommended price (not to zero, not to a blank state).
+
+**Hard rule — the delete tools have no built-in confirmation gate, so this skill supplies it.** Before calling either delete tool, call `wheelhouse_rmGetCustomRates` and list for the client every rate period that will be removed, truncated, or split, with its before and after date ranges (a mid-period deletion produces two separate remaining periods where there was one — show both). Do not call until the client has explicitly confirmed those exact dates, not just the general intent to delete.
 
 ## `expires_at` for speculative rates
 

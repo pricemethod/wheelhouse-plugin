@@ -1,11 +1,11 @@
 ---
 name: MCP-price-change-attribution
-description: Checks whether recent pricing changes (custom rates, seasonal/event rules, monthly rules, base price, global minimums, day-of-week, etc.) actually correlate with subsequent bookings, over a configurable 7- or 30-day lookback. Trigger for "did that price change work," "did my rate change get bookings," "check if pricing changes led to bookings," "price change impact," "did raising/lowering rates help," or any ask to review recent pricing edits against booking activity for a listing. Serves the Identify stage of Active Revenue Management — this is a post-hoc effectiveness check, distinct from stly-pacing (which compares current pace to last year, not to your own recent edits) and distinct from making a new rate change (see custom-rate-intervention workflow in project instructions §9 for that). Not for forward-looking "should I change my price" recommendations — this looks backward at changes already made.
+description: Checks whether recent pricing changes (custom rates, seasonal/event rules, monthly rules, base price, global minimums, day-of-week, etc.) actually correlate with subsequent bookings, over a configurable 7- or 30-day lookback. Trigger for "did that price change work," "did my rate change get bookings," "check if pricing changes led to bookings," "price change impact," "did raising/lowering rates help," or any ask to review recent pricing edits against booking activity for a listing. Serves the Identify stage of Active Revenue Management — this is a post-hoc effectiveness check, distinct from MCP-stly-pacing-calculations (which compares current pace to last year, not to your own recent edits) and distinct from making a new rate change (see Context-CustomRates or Context-Preferences in wheelhouse-writes, if installed, for that). Not for forward-looking "should I change my price" recommendations — this looks backward at changes already made.
 ---
 
 # Price Change Attribution
 
-Correlates recent pricing/preference changes on a listing with the bookings that followed, distinguishing changes that can be tied to specific dates from changes that can only be read as a pace trend. See the project instructions document for shared conventions (terminology, `listing_id`+`channel` pairing, rate limiting, revenue basis) — this file only covers what's specific to this workflow.
+Correlates recent pricing/preference changes on a listing with the bookings that followed, distinguishing changes that can be tied to specific dates from changes that can only be read as a pace trend. Shared conventions: always pass `listing_id` together with its `channel`; `revenue_basis` `rent` means `nightly_subtotal` (rent only, no fees or taxes); the RM API allows 60 requests/minute, so on a `429` wait for `Retry-After` before retrying. The rest of this file covers what's specific to this workflow.
 
 ## When to use this skill
 
@@ -14,7 +14,7 @@ Correlates recent pricing/preference changes on a listing with the bookings that
 - "Has raising the base price hurt or helped pace?"
 - "Review the last 30 days of pricing changes against bookings"
 
-Not for: making a new pricing decision (that's the Intervention Matrix / custom-rate-intervention workflow), or comparing pace to last year (that's `stly-pacing`).
+Not for: making a new pricing decision (that's `Context-CustomRates` or `Context-Preferences` in wheelhouse-writes, if installed), or comparing pace to last year (that's `MCP-stly-pacing-calculations`).
 
 ## Inputs
 
@@ -22,7 +22,7 @@ Not for: making a new pricing decision (that's the Intervention Matrix / custom-
 |---|---|---|
 | `listing_id` + `channel` | — | Required pair, resolved via `GetListings` if not already known this session |
 | `lookback_days` | 30 | How far back to check for changes. Configurable to 7, or any value up to the API's 90-day changelog ceiling |
-| `revenue_basis` | `rent` | Per project convention — state the default in output |
+| `revenue_basis` | `rent` | Default for this skill — state it in output |
 
 ## Workflow
 
@@ -30,7 +30,7 @@ Not for: making a new pricing decision (that's the Intervention Matrix / custom-
 
 Confirm `listing_id`+`channel` (via `GetListings` if not already cached this session). Call `wheelhouse_rmGetPreferencesChangelog` with `start_date = today - lookback_days`, `end_date = tomorrow` (the endpoint's own default). Remember: **values earlier than 90 days back are silently clamped** — if the user asks for a longer lookback, tell them the actual window used.
 
-Drop every event where `source == "Wheelhouse"` (these are `"Prices posted"` sync confirmations, not preference changes, and carry no `msg` content worth parsing).
+Filter on `event`, not `source`. The changelog is the listing's whole history, not just preference edits; its `event` values are `"Settings changed"`, `"Custom rates"`, `"Prices posted"`, `"Calendar synced"`, and `"Reservations imported"`. Only `"Settings changed"` and `"Custom rates"` events go on to attribution. `"Prices posted"` and `"Calendar synced"` are channel sync records, not pricing decisions, so they are not attribution events; set them aside rather than parsing them as changes. Drop `"Reservations imported"` events entirely. Don't filter on `source`: `source == "Wheelhouse"` also covers real system-made setting changes (internal adjustments, migrations), and reservation imports come from `"Wheelhouse team"`, so a source filter both drops real changes and lets junk through. Keep `source` only as a display field ("who made it": User / API / Customer Support / Wheelhouse).
 
 **Exclude same-day changes from attribution.** Any change with a `time` on today's calendar date hasn't had time to generate bookings yet — comparing it against reservations would just produce a false "no impact" read. Don't silently drop these, though: list them in output under a distinct "too recent to evaluate" note (what changed, when, today) so the RM knows it exists and can re-check tomorrow, but skip Step 4/5 attribution logic for them entirely.
 
@@ -61,7 +61,7 @@ Do **not** make a separate `GetReservations` call per change. Make a single call
 
 **Filter to `status == "Accepted"` before any counting.** Canceled reservations show up in this same pull and must not be counted as bookings resulting from a change — a canceled stay isn't evidence a price change worked.
 
-Every downstream step (date-scoped joins, month-scoped joins, and the general pace comparison) filters this same in-memory result set rather than issuing new calls. This keeps the whole skill to roughly 3 API calls (`GetListings` if needed, `GetPreferencesChangelog`, one paginated `GetReservations` pull) regardless of how many changes are found — well under the ~20-call confirmation threshold in the project instructions, so no call-budget warning is needed for single-listing use.
+Every downstream step (date-scoped joins, month-scoped joins, and the general pace comparison) filters this same in-memory result set rather than issuing new calls. This keeps the whole skill to roughly 3 API calls (`GetListings` if needed, `GetPreferencesChangelog`, one paginated `GetReservations` pull) regardless of how many changes are found — well under the ~60 calls (the API's per-minute limit) where you'd tell the user the estimate and confirm before running, so no call-budget warning is needed for single-listing use.
 
 ### Step 4 — Date-scoped and month-scoped attribution
 
@@ -95,17 +95,17 @@ Structure output as three sections, in this order, followed by a short closing a
 
 One row per change that has at least one qualifying booking. Table columns:
 
-| Change | Date Range / Months | Made At | Edits in Window | Bookings | Nights | Revenue | ADR |
-|---|---|---|---|---|---|---|---|
+| Change | Date Range / Months | Made At | Made By | Edits in Window | Bookings | Nights | Revenue | ADR |
+|---|---|---|---|---|---|---|---|---|
 
-"Change" is the plain-language setting + value (e.g. "Fixed rate $60/$98"). "Edits in Window" is the count from the latest-wins rule (only show if >1). Revenue/ADR follow `revenue_basis`. Omit this table entirely if nothing qualifies, and say so in one line rather than showing an empty table.
+"Change" is the plain-language setting + value (e.g. "Fixed rate $60/$98"). "Made By" is the event's `source` (User / API / Customer Support / Wheelhouse), display only. "Edits in Window" is the count from the latest-wins rule (only show if >1). Revenue/ADR follow `revenue_basis`. Omit this table entirely if nothing qualifies, and say so in one line rather than showing an empty table.
 
 **2. General Changes — Pace Impact**
 
 One row per general change evaluated (i.e., not same-day). Table columns:
 
-| Setting | New Value | Edits in Window | Nights/day (baseline → check, Δ%) | Bookings/day (baseline → check, Δ%) | ADR (baseline → check, Δ%) | Read |
-|---|---|---|---|---|---|---|
+| Setting | New Value | Made By | Edits in Window | Nights/day (baseline → check, Δ%) | Bookings/day (baseline → check, Δ%) | ADR (baseline → check, Δ%) | Read |
+|---|---|---|---|---|---|---|---|
 
 "Read" is the interpretation band from `references/pace-benchmark-calculations.md` (increased / no material change / decreased). If a base price line was "changed to recommended" and required `GetBasePriceHistory` to resolve, show the resolved dollar figure in "New Value."
 
@@ -113,8 +113,8 @@ One row per general change evaluated (i.e., not same-day). Table columns:
 
 Date-scoped or month-scoped changes with **zero** qualifying bookings — this is a real finding, not a null result to omit. Columns:
 
-| Change | Date Range / Months | Made At | Edits in Window | Days Since Change | Note |
-|---|---|---|---|---|---|
+| Change | Date Range / Months | Made At | Made By | Edits in Window | Days Since Change | Note |
+|---|---|---|---|---|---|---|
 
 Use "Note" for anything that changes how the zero should be read — e.g. "stay dates still ~3 weeks out, too early to call this a miss" vs. "dates are imminent and still empty."
 
@@ -124,7 +124,7 @@ Use "Note" for anything that changes how the zero should be read — e.g. "stay 
 
 ## Edge cases
 
-- **Multiple overlapping changes to the same setting within the window** — resolved by latest-wins per §2 above; don't attempt to reconstruct full edit history.
+- **Multiple overlapping changes to the same setting within the window** — resolved by latest-wins per Step 2 above; don't attempt to reconstruct full edit history.
 - **Change made very recently (e.g., yesterday)** — the check window will be very short; report the raw numbers plainly rather than trying to project or annualize them.
 - **No changes found in the window** — say so; don't run the reservations pull for nothing.
 - **Listing has fewer than ~30 days of reservation history** (new listing) — the baseline pace will be noisy or unavailable; flag this rather than presenting a misleading comparison.

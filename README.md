@@ -83,8 +83,6 @@ Once the plugin and MCP are connected, ask your assistant things like:
 - Which listings are selling fast? → `MCP-Leaderboard-Fast-Seller`
 - Sync listings, KPIs, reservations, or calendars to disk → `COWORK-Data-Syncs`
 
-Shared MCP guidance lives in `MCP-wheelhouse-mcp-general-use-guidance`.
-
 With **wheelhouse-writes** installed, you can also ask things like:
 
 - Change my base price / seasonality / minimum stay → `Context-Preferences` (or `Context-Preferences-API` for an unattended script)

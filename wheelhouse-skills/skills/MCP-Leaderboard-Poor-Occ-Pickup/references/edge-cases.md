@@ -9,11 +9,10 @@ name. Naming alone suggested `listing_id` = Wheelhouse-internal ID and
 account can't prove it (many listings there have identical values in both
 ID spaces by coincidence).
 
-**Confirmed live** against The Luzianne (a real `rentalsunited`-channel
-listing, `channel`-scoped id `3995218`, `wheelhouse_id` `56573612`): the
-bulk KPI row for this listing was `{"listing_id": 56573612,
-"partner_listing_id": "3995218", ...}`. A second listing
-(`63721665`/`4816578`) confirmed the same pattern. **Always join bulk KPI
+**Confirmed live** against a real `rentalsunited`-channel listing whose
+channel-scoped id and `wheelhouse_id` differ: the bulk KPI row came back as
+`{"listing_id": <wheelhouse_id>, "partner_listing_id": "<channel id>", ...}`.
+A second listing on another channel confirmed the same pattern. **Always join bulk KPI
 results to `GetListings` on `wheelhouse_id`, never on `partner_listing_id`
 unless you've separately confirmed a single-channel account.**
 
@@ -21,8 +20,8 @@ unless you've separately confirmed a single-channel account.**
 
 Both `GetBulkListingKpis` and `GetListings` paginate without returning a
 total row count. Stop paging when a page returns fewer rows than the
-requested `per_page` -- the general convention used elsewhere in this
-project, confirmed necessary here too.
+requested `per_page` -- the RM API's documented pagination convention,
+confirmed necessary here too.
 
 ## Missing-from-one-metric handling
 
@@ -37,11 +36,13 @@ newer or less-active listings.
 
 ## Automation-off listings distort the list if not gated out
 
-Live dry run flagged the (then) #1 listing, Vatican House, as the most
+Live dry run flagged the (then) #1 listing, a brand-new one, as the most
 urgent by occupancy+pickup alone -- but its `automatic_rate_posting_enabled`
-was `false` and `base_price` was `null`. Its flat, unchanging $87 asking
-rate was a manually-set number entirely outside Wheelhouse's pricing
-engine, not a pricing problem to diagnose. Gating the list itself on
+was `false`. Its flat, unchanging $87 asking rate was a manually-set number
+entirely outside Wheelhouse's pricing engine, not a pricing problem to
+diagnose. (Its `base_price` was also `null`, but that is not part of the
+signal: `null` just means the recommended base is in use, which is normal
+for well-configured automated listings too.) Gating the list itself on
 `automatic_rate_posting_enabled == true` (rather than just flagging it
 during the deep dive) removed 10 of 48 listings in the real account --
 mostly obvious "Example"/"Test" sandbox listings, but also this one real
@@ -51,12 +52,12 @@ listing that would otherwise have topped the list for the wrong reason.
 
 `GetNeighborhoodPricing` takes no `currency` parameter (unlike
 `GetBasePriceRecommendation` / `GetPriceRecommendations`, which do). Live
-dry run against Vatican House (an Italy-market listing priced in USD)
+dry run against an Italy-market listing priced in USD
 returned neighborhood data in **EUR** -- a literal $-vs-€ comparison would
 have been meaningless, and there's no in-tool way to convert it. Skip the
 numeric comparison and say so when currencies differ.
 
-Separately, a live dry run against a Steamboat Springs, CO listing showed
+Separately, a live dry run against a mountain-market listing showed
 the risk of a thin comp cluster: `listings_count` was only 6-8 in the near
 term (shrinking to 2-3 further out), and prices in the far-future portion
 of the same response were obviously corrupted sandbox data -- repeated
@@ -69,9 +70,10 @@ values.
 
 Two real `GetBasePriceRecommendation` calls in this session landed at
 opposite ends of `anchor_credibility`:
-- Vatican House (0 reviews, 1 lifetime booking): recommendation $222 vs.
-  null base price, but `anchor_credibility: 0.0` -- not a usable signal.
-- A Steamboat Springs listing with real booking history: recommendation
+- A brand-new listing (0 reviews, 1 lifetime booking): recommendation $222 with
+  `base_price: null` (the recommended base in use, so no manual base to
+  gap against), at `anchor_credibility: 0.0` -- not a usable signal.
+- A mountain-market listing with real booking history: recommendation
   $244 vs. an active $278 base price (above even the $268 aggressive
   band), at `anchor_credibility: 90.0` -- a real, actionable finding.
 
@@ -81,10 +83,17 @@ as equally meaningful.
 
 ## Contradictory signals are informative, not noise to average away
 
-In the same Steamboat Springs dry run, Step 1 (market) suggested the
+In the same mountain-market dry run, Step 1 (market) suggested the
 listing was priced at less than half the neighborhood median (looks
 underpriced), while Step 4 (base rate vs. recommendation, high confidence)
 showed the base rate above even the aggressive recommendation (looks
 overpriced). Both findings are real; they just answer different questions
 at different confidence levels. Surface both explicitly rather than
 resolving the contradiction silently.
+
+Caveat on that run: Step 1 compared the rent-only `asking_rate` against
+neighborhood prices, which include guest fees, so the "less than half the
+median" read was biased toward underpriced. Step 1 now multiplies the
+listing price by `fee_multiplier` from `wheelhouse_rmGetFeeImpactCalendar`
+first; this dry run has not been re-checked on that basis, so some of the
+contradiction may have been fees rather than a real gap.

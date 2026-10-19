@@ -6,13 +6,13 @@ the loop -- see _wh_client.py's docstring for why that matters here.
 
 Two modes:
   --mode rolling    Nightly incremental sync. Fetches stay_date >= (today -
-                    30 days) forward, per listing, filters out cancelled
+                    30 days) forward, per listing, keeps only Accepted
                     reservations, writes one JSONL file per listing. Also
                     migrates anything that's aged out of a *previous* rolling
                     snapshot into the stable/ archive.
   --mode backfill   One-time (or occasional) historical pull. Fetches
                     stay_date in [today - N years, today - 30 days) per
-                    listing, filters cancelled, writes straight into
+                    listing, keeps only Accepted, writes straight into
                     stable/{year}.jsonl. Defaults to 1 year back (--years 1)
                     -- this default is deliberate and should not be increased
                     casually: a routine backfill should cover exactly one
@@ -27,11 +27,11 @@ Usage:
   python3 sync_reservations.py --api-key-file /path/to/key.txt --out /path/to/wheelhouse_data --mode backfill --years 1
   python3 sync_reservations.py --api-key-file /path/to/key.txt --out /path/to/wheelhouse_data --selftest
 
-Requires listings.json (from the sibling wheelhouse-data-sync-api skill) to
+Requires listings.json (from the sibling sync_listings_kpis.py) to
 already exist at --out/listings.json, keyed by "{id}_{channel}" -> listing
 record with "id" and "channel" fields -- this script reads that to know which
 listing/channel pairs to iterate, rather than re-fetching listings itself.
---out here MUST be the exact same directory the data-sync-api skill was run
+--out here MUST be the exact same directory sync_listings_kpis.py was run
 against -- there is no way to guess this from elsewhere, and a wrong --out
 fails loudly and immediately (see load_listings) rather than silently
 creating an empty/wrong cache.
@@ -54,17 +54,19 @@ Output layout (all under --out):
                                                   rolling/backfill progress
                                                   ledgers described below
 
-Cancellation handling: confirmed on a real account that cancelled
-reservations persist in GetReservations/`/reservations` with
-status "Canceled" (single L) rather than disappearing -- every record with
-that status (case-insensitive, "Cancelled" also matched) is dropped before
-it's ever written to any cache file. Any other status value that isn't
-"Accepted" gets logged to index.json's unrecognized_reservation_statuses so a
-new status this script hasn't seen yet is surfaced, not silently mishandled.
+Status handling (allow-list): the API documents six status values --
+Accepted, Declined, Expired, Canceled, Pending, Ignored -- and non-bookings
+persist in `/reservations` rather than disappearing (confirmed on a real
+account for "Canceled", single L). Only "Accepted" is written to any cache
+file; "Pending" is kept too only with --include-pending. Declined, Expired,
+Ignored and Canceled ("Cancelled" also matched, case-insensitive) are always
+dropped. A status outside the documented six is also dropped, and logged to
+index.json's unrecognized_reservation_statuses so a new value is surfaced,
+not silently mishandled.
 
 Same-day resume, cross-day always-refresh for --mode rolling (added
 2026-07-28, applying the same fix already verified end-to-end on the sibling
-wheelhouse-data-sync-api skill's KPI sync): the requirement is "run nightly
+sync_listings_kpis.py KPI sync): the requirement is "run nightly
 and always pull every listing's current reservation window" -- a scheduled
 nightly sync must never silently skip a listing just because a rolling file
 with that name already exists from a previous night. At the same time, a
@@ -126,7 +128,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from _wh_client import WheelhouseClient, load_api_key  # noqa: E402
 
 KNOWN_GOOD_STATUS = "accepted"
-CANCELLED_STATUSES = {"canceled", "cancelled"}
+PENDING_STATUS = "pending"
+# Documented non-booking statuses (plus the "Cancelled" spelling) -- dropped
+# without being logged as unrecognized.
+DROPPED_STATUSES = {"declined", "expired", "ignored", "canceled", "cancelled"}
 
 
 def now_iso():
@@ -147,13 +152,13 @@ def load_listings(out_dir):
     path = os.path.join(out_dir, "listings.json")
     if not os.path.exists(path):
         sys.exit(
-            f"{path} not found. This skill depends on wheelhouse-data-sync-api "
+            f"{path} not found. This script depends on sync_listings_kpis.py "
             f"having already been run against this exact --out directory -- "
             f"run its sync_listings_kpis.py first (or re-run it here) so "
             f"listings.json exists at this path. Don't assume --out matches "
             f"whatever directory was used for a previous invocation of either "
             f"skill unless you've confirmed it: a user may point this at a "
-            f"different folder than the data-sync-api skill used, in which "
+            f"different folder than sync_listings_kpis.py used, in which "
             f"case this file simply won't be here yet."
         )
     with open(path) as f:
@@ -185,14 +190,17 @@ def record_key(r):
     return f"composite:{r.get('listing_id')}:{r.get('start_date')}:{r.get('end_date')}:{r.get('channel')}"
 
 
-def filter_and_tag(records, listing_id, channel, unrecognized_statuses):
+def filter_and_tag(records, listing_id, channel, unrecognized_statuses, include_pending=False):
     kept = []
     for r in records:
         status = (r.get("status") or "").strip().lower()
-        if status in CANCELLED_STATUSES:
+        if status == PENDING_STATUS:
+            if not include_pending:
+                continue
+        elif status != KNOWN_GOOD_STATUS:
+            if status not in DROPPED_STATUSES:
+                unrecognized_statuses.add(r.get("status") or "(missing)")
             continue
-        if status and status != KNOWN_GOOD_STATUS:
-            unrecognized_statuses.add(r.get("status"))
         r["listing_id"] = listing_id
         r["channel"] = channel
         kept.append(r)
@@ -274,7 +282,7 @@ def selftest(client, out_dir, date_override):
     print("=== SELF-TEST PASSED ===")
 
 
-def sync_rolling(client, out_dir, sync_date, force=False, verbose=False):
+def sync_rolling(client, out_dir, sync_date, force=False, verbose=False, include_pending=False):
     pairs = load_listings(out_dir)
     rolling_dir = os.path.join(out_dir, "reservations", "rolling")
     stable_dir = os.path.join(out_dir, "reservations", "stable")
@@ -317,16 +325,24 @@ def sync_rolling(client, out_dir, sync_date, force=False, verbose=False):
             errors.append({"listing": key, "error": str(e)})
             continue
 
-        current = filter_and_tag(fetched, listing_id, channel, unrecognized)
+        current = filter_and_tag(fetched, listing_id, channel, unrecognized, include_pending)
         write_jsonl(rolling_path, current)
         total_written += len(current)
         fresh_count += 1
 
+        # <= cutoff, not < cutoff: the stay_date filter only returns
+        # end_date > start_date, so a reservation drops out of the fetch on the
+        # night the cutoff reaches its check-out date (end_date == cutoff).
         current_keys = {record_key(r) for r in current}
-        aged_out = [
-            r for r in previous
-            if record_key(r) not in current_keys and (r.get("end_date") or "") < cutoff
-        ]
+        # Re-filter on status too: a rolling file written before the allow-list
+        # existed can still hold Declined/Expired/Pending/Ignored records.
+        aged_out = filter_and_tag(
+            [
+                r for r in previous
+                if record_key(r) not in current_keys and (r.get("end_date") or "") <= cutoff
+            ],
+            listing_id, channel, unrecognized, include_pending,
+        )
         if aged_out:
             written = append_stable(stable_dir, aged_out, existing_keys_cache)
             total_aged_out += sum(written.values())
@@ -357,7 +373,7 @@ def sync_rolling(client, out_dir, sync_date, force=False, verbose=False):
     }
 
 
-def sync_backfill(client, out_dir, years, sync_date, force=False, verbose=False):
+def sync_backfill(client, out_dir, years, sync_date, force=False, verbose=False, include_pending=False):
     pairs = load_listings(out_dir)
     stable_dir = os.path.join(out_dir, "reservations", "stable")
     today = utc_today(sync_date)
@@ -411,7 +427,7 @@ def sync_backfill(client, out_dir, years, sync_date, force=False, verbose=False)
             errors.append({"listing": key, "error": str(e)})
             continue
 
-        tagged = filter_and_tag(fetched, listing_id, channel, unrecognized)
+        tagged = filter_and_tag(fetched, listing_id, channel, unrecognized, include_pending)
         written = append_stable(stable_dir, tagged, existing_keys_cache)
         total_written += sum(written.values())
         fresh_count += 1
@@ -443,7 +459,7 @@ def sync_backfill(client, out_dir, years, sync_date, force=False, verbose=False)
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--api-key-file", required=True)
-    ap.add_argument("--out", required=True, help="Output directory (wheelhouse_data) -- must match wheelhouse-data-sync-api's --out")
+    ap.add_argument("--out", required=True, help="Output directory (wheelhouse_data) -- must match sync_listings_kpis.py's --out")
     ap.add_argument("--mode", choices=["rolling", "backfill"])
     ap.add_argument(
         "--years", type=int, default=1,
@@ -458,6 +474,12 @@ def main():
         help="Ignore the resume ledger and re-fetch every listing regardless of what's already "
         "recorded as synced/backfilled. Not needed for routine nightly rolling runs (a new "
         "calendar day already re-fetches everything); mainly for a guaranteed fully-fresh pull.",
+    )
+    ap.add_argument(
+        "--include-pending",
+        action="store_true",
+        help="Also cache reservations with status Pending (default: Accepted only). Declined, "
+        "Expired, Ignored and Canceled are always dropped.",
     )
     ap.add_argument(
         "--date",
@@ -480,7 +502,10 @@ def main():
     sync_date = args.date or utc_today().isoformat()
 
     if args.mode == "rolling":
-        result = sync_rolling(client, args.out, sync_date, force=args.force, verbose=args.verbose)
+        result = sync_rolling(
+            client, args.out, sync_date, force=args.force, verbose=args.verbose,
+            include_pending=args.include_pending,
+        )
         print(
             f"Rolling sync done for {result['sync_date']} (cutoff {result['cutoff']}). "
             f"Listings: {result['listings_total']} total, {result['listings_fresh']} freshly fetched, "
@@ -498,7 +523,10 @@ def main():
                     f"({result['listings_fresh']} fetched this run, {result['listings_skipped']} already done earlier today)."
                 )
     else:
-        result = sync_backfill(client, args.out, args.years, sync_date, force=args.force, verbose=args.verbose)
+        result = sync_backfill(
+            client, args.out, args.years, sync_date, force=args.force, verbose=args.verbose,
+            include_pending=args.include_pending,
+        )
         print(
             f"Backfill done ({result['years']}yr, {result['start_date']} to {result['end_date']}). "
             f"Listings: {result['listings_total']} total, {result['listings_fresh']} freshly fetched, "

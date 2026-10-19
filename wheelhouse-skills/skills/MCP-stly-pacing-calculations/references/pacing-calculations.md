@@ -1,6 +1,6 @@
 # Pacing Calculations Reference
 
-Full arithmetic for `stly-pacing`. Read this when actually computing a pacing report; the SKILL.md body covers when/how to orchestrate the tool calls.
+Full arithmetic for `MCP-stly-pacing-calculations`. Read this when actually computing a pacing report; the SKILL.md body covers when/how to orchestrate the tool calls.
 
 ---
 
@@ -50,7 +50,7 @@ When today is mid-month, Period 1 legitimately lands in `immediate` — that's c
 
 ## 3. STLY cutoff and fetch strategy
 
-**Cutoff:** `stly_cutoff_date = today − 365 days`. For each period, STLY = reservations with stay dates in the *equivalent period one year earlier*, filtered to `booked_at ≤ stly_cutoff_date`. This reconstructs "what was on the books at the equivalent point in last year's booking cycle" — not last year's final actuals.
+**Cutoff:** `stly_cutoff_date = today − 365 days`. For each period, STLY = reservations with stay dates in the *equivalent period one year earlier* that were on the books at `stly_cutoff_date` (`booked_at ≤ stly_cutoff_date`, plus the status rule below). This reconstructs "what was on the books at the equivalent point in last year's booking cycle" — not last year's final actuals.
 
 Apply the same cutoff uniformly across the whole period, including any portion of a current, partially-elapsed period — a stay date that's already passed will always satisfy `booked_at ≤ cutoff` on the prior-year side (it had to be booked before the night occurred), so no special-casing is needed for past-vs-future portions of Period 1.
 
@@ -67,9 +67,19 @@ Wheelhouse:wheelhouse_rmGetReservations
 ```
 The 30-day backward extension guarantees you catch reservations that check in before the window but have some stay nights falling inside it (a booking spanning May 28–June 3 needs to be caught even though the window starts June 1). Then pro-rate (§4) so only nights actually inside a target period count toward that period.
 
-For the STLY side, after fetching, filter client-side to `booked_at ≤ stly_cutoff_date` before pro-rating.
+**Reservation status:** field `status`, documented values `Accepted`, `Declined`, `Expired`, `Canceled`, `Pending`, `Ignored`. Canceled rows also carry `canceled_at` (ISO-8601; single-l spelling, set whenever `status` is `Canceled`). `booked_at` is nullable. Filter client-side before pro-rating:
 
-**Reservation status:** confirmed field name is `status` (observed value `"Accepted"` in a live sample). Include only reservations whose `status` matches the accepted/confirmed value; exclude anything else (e.g. a cancellation status) once its exact string is observed — the sample pulled so far hasn't contained one.
+```
+current side:  status == "Accepted"
+STLY side:     booked_at is not null
+               AND booked_at ≤ stly_cutoff_date
+               AND ( status == "Accepted"
+                     OR (status == "Canceled" AND canceled_at > stly_cutoff_date) )
+```
+
+- The `Canceled` clause matters: a stay that was on the books at the cutoff and canceled later was part of last year's on-the-books position. Dropping it understates STLY and flatters current pace.
+- `Declined`, `Expired`, `Pending`, and `Ignored` never count on either side (they were never confirmed stays).
+- **Null `booked_at`:** the row can't be placed relative to the cutoff, so exclude it from the STLY side and report the count as `stly_rows_undated`. It still counts on the current side if `Accepted`. Don't fall back to `created_at` (when the row was created in Wheelhouse) unless you've first compared `created_at` with `booked_at` on rows that have both and found them close — that equivalence is unverified.
 
 **When STLY is unavailable** (listing under 12 months old, or zero prior-year reservations found): return `null` for all STLY/variance fields on that listing with `stly_available: false`.
 
@@ -77,12 +87,17 @@ For the STLY side, after fetching, filter client-side to `booked_at ≤ stly_cut
 
 ## 4. Pro-ration for cross-boundary reservations
 
-**Confirmed reservation fields from a live call:** `start_date`, `end_date` (stay dates), `booked_at`, `status` (observed value: `"Accepted"` — other values such as cancellations likely exist but weren't present in the sample pulled; exclude any reservation whose `status` isn't the confirmed/accepted value once more values are observed), `nightly_subtotal` (this is the **total** subtotal for the whole stay, not a per-night figure — divide by nights as below), `extra_guest`, `security_deposit`, `extras`, `taxes` (all frequently `null` — treat as 0 per the null-fee handling below), `total_price`, `currency`, `confirmation_code`, `source_name`.
+**Reservation fields used:** `start_date`, `end_date` (stay dates), `booked_at` (nullable), `status` and `canceled_at` (see §3 for the filter), `nightly_subtotal` (this is the **total** subtotal for the whole stay, not a per-night figure — rent only, the platform's 'Revenue' metric; divide by nights as below), `total_price` (guest-paid total, nullable), `taxes`, `extra_guest`, `security_deposit`, `extras` (all frequently `null`), `currency`, `confirmation_code`, `source_name`. There is no separate cleaning-fee field — fees are only recoverable via `total_price`.
 
 ```
 total_nights        = end_date − start_date   (days)
 nightly_rate        = nightly_subtotal / total_nights
-gross_nightly_rate  = (nightly_subtotal + extra_guest + extras) / total_nights
+
+gross_total         = total_price − coalesce(taxes, 0)          (API's documented Revenue + Fees)
+                    fallback if total_price is null:
+                      nightly_subtotal + coalesce(extra_guest, 0) + coalesce(extras, 0)
+                      → mark the row fee_incomplete (cleaning and other fees missing)
+gross_nightly_rate  = gross_total / total_nights
 
 nights_in_period    = count of nights from this reservation's stay falling inside the target period
 revenue_for_period       = nightly_rate × nights_in_period
@@ -90,7 +105,8 @@ gross_revenue_for_period = gross_nightly_rate × nights_in_period
 ```
 
 - **Taxes and security deposits are excluded** from every revenue figure — taxes are a pass-through, not revenue, and a security deposit is a hold. This means this skill's revenue figures are Revenue (Rent) and Revenue (+Fees) only; it does not produce an `all_in` (+Taxes) figure. If the user specifically needs a taxes-inclusive gross figure, that's a different workflow (Daily Booking Review / Owner Reporting), not this one.
-- **Null fee handling:** treat missing `extra_guest`/`extras` as 0; still include the reservation using `nightly_subtotal` alone for the gross figure.
+- **Security deposit check (unverified):** the API doesn't state whether `total_price` includes `security_deposit`. If a fetched row has a non-null `security_deposit`, check whether `total_price − taxes − nightly_subtotal` contains it (e.g. the fee remainder is ≥ the deposit and drops to a plausible fee amount once the deposit is removed); if it does, also subtract `security_deposit` from `gross_total` for every row and say so in the output. If all deposits are null, no adjustment is needed.
+- **Null fee handling:** when `total_price` is null, use the fallback above and count the row as fee-incomplete — it still contributes to Revenue (+ Fees), but understated. Report the fee-incomplete row count alongside Revenue (+ Fees) / ADR (+ Fees) whenever it's non-zero. Revenue (Rent) is unaffected (it uses `nightly_subtotal` only).
 
 ---
 
@@ -178,4 +194,4 @@ Per listing, with both STLY and Adjusted Occupancy on (the default per this skil
 ```
 Plus 1–3 calls to resolve the listing set itself (`GetListings` or `GetSegmentListings`, paginated).
 
-Per the project's general rate-limit rule: **before running more than ~20 total calls, tell the user the estimate and let them choose to proceed, narrow scope, or turn off STLY/adjusted-occupancy for a faster pass.** At ~6 calls/listing that threshold arrives around 3–4 listings — call this out plainly rather than silently batching through it. Batch actual execution in groups of ~5 listings with pauses so as not to exceed 20 requests/minute; back off exponentially (1s → 2s → 4s → … capped at 60s, ±10–20% jitter) on any `429`.
+**Before running more than ~60 total calls, tell the user the estimate and let them choose to proceed, narrow scope, or turn off STLY/adjusted-occupancy for a faster pass.** At ~6 calls/listing that threshold arrives around 10 listings — call this out plainly rather than silently batching through it. Batch actual execution in groups of ~5 listings with pauses so as not to exceed 60 requests/minute (honour `Retry-After` on a `429`); back off exponentially (1s → 2s → 4s → … capped at 60s, ±10–20% jitter) on any `429`.

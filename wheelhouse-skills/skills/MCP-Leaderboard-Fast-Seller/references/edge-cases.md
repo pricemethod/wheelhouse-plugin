@@ -14,7 +14,7 @@ existed. Final formula: `pickup(14_0) / nights_bookable(0_60)`.
 
 The original trailing-window version (`nights_bookable(14_0)`) returned
 `2.0` instead of `14.0` for a listing created 4 days before the dry run
-(Vatican House) -- a brand-new listing simply hasn't had 14 days of
+-- a brand-new listing simply hasn't had 14 days of
 calendar history to be "bookable" in yet, so the trailing count shrinks
 with tenure. Dividing a real `pickup` number by a tiny trailing denominator
 could make a 4-day-old listing with one lucky early booking look like the
@@ -53,14 +53,14 @@ Before settling on `nights_bookable(0_60)`, `nights_available(0_60)` (nights
 neither blocked nor already booked -- i.e. what's *currently still open*,
 as opposed to total addressable capacity) was tried as the denominator.
 Live dry run showed why this is the wrong choice for this skill's purpose:
-it systematically pushes **near-sold-out** listings to the top. DC - Thomas
-Circle had only 17 nights available in the next 60 days; dividing its
+it systematically pushes **near-sold-out** listings to the top. One urban
+listing had only 17 nights available in the next 60 days; dividing its
 pickup count by that small remaining-inventory number produced the
-*highest* pace score in the portfolio (94.1%), ahead of Ceros (the far
+*highest* pace score in the portfolio (94.1%), ahead of the far
 larger, more broadly-selling listing that led every other version of this
 ranking). A listing with almost nothing left to sell isn't a great fit for
 a "where's there room to push further" list, and it also starves Step 2b's
-opportunity-days scan of candidate days (DC - Thomas Circle would only
+opportunity-days scan of candidate days (that urban listing would only
 have 17 unbooked nights total to search across).
 
 `nights_bookable` doesn't have this problem because it counts total
@@ -77,7 +77,7 @@ low-remaining-inventory listings for the wrong reason).
 
 First design pass: rank all 60 days in the neighborhood window by demand,
 take the top 10, then check which of those happened to be unbooked for
-this listing. Live dry run against Ceros (the #1 fast-seller) showed why
+this listing. Live dry run against the #1 fast-seller showed why
 this is the wrong order: 6 of the top-10-demand days were already booked
 (this listing had captured its own hottest nights), leaving only 4
 apparent "opportunities" -- and Sep 19 (30.6% neighborhood adjusted
@@ -96,11 +96,11 @@ place (it's here *because* it's selling fast).
 
 ## ID mapping and pagination
 
-Same conventions as `occupancy-pickup-priority-list` -- join bulk KPI
+Same conventions as `MCP-Leaderboard-Poor-Occ-Pickup` -- join bulk KPI
 results to `GetListings` on `wheelhouse_id`, not `partner_listing_id`; page
 until a page returns fewer rows than requested. Confirmed again in this
-dry run against the same account (Ceros: `listing_id: 63721665` /
-`partner_listing_id: "4816578"`, and per-listing endpoint calls for a
+dry run against the same account (the bulk `listing_id` is the Wheelhouse
+id and `partner_listing_id` the channel id), and per-listing endpoint calls for a
 non-`hypothetical` channel need the channel-scoped ID, not `wheelhouse_id`
 -- caught live when a first attempt at `GetNeighborhoodOccupancy` using
 `wheelhouse_id` 404'd).

@@ -4,7 +4,7 @@ Direct-API sync for Wheelhouse price calendars -- the HISTORY-KEEPING
 version. No Claude/MCP calls in the loop -- see _wh_client.py's docstring
 for why.
 
-This is the sibling of the simple wheelhouse-calendar-sync-api skill. Both
+This is the sibling of the simple sync_calendar.py (COWORK-Data-Syncs). Both
 pull each listing's FUTURE price calendar (today forward), but this version
 additionally preserves every past pull as a dated snapshot instead of just
 overwriting it:

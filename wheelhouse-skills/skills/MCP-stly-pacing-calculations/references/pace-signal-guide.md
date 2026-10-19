@@ -1,6 +1,6 @@
 # Pace Signal Guide
 
-Full reference for `stly-pacing`'s pace signal and interpretation text. This is the Matrix Pacing framework (ADR × Occupancy vs. a trusted benchmark) applied specifically to STLY as the benchmark, at the period level.
+Full reference for `MCP-stly-pacing-calculations`'s pace signal and interpretation text. This is the Matrix Pacing framework (ADR × Occupancy vs. a trusted benchmark) applied specifically to STLY as the benchmark, at the period level.
 
 ---
 
