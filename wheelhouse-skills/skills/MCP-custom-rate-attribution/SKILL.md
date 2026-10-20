@@ -1,28 +1,28 @@
 ---
 name: MCP-custom-rate-attribution
-description: Fast, single-listing check of whether Custom Rates set in the last 30 days actually got booked — the simple, custom-rates-only sibling to price-change-attribution. Trigger for "did that custom rate get booked," "check if my custom rate led to bookings," "did the rate I set on [listing] work," "did Zachary's rate change book," or any quick post-hoc check specifically about Custom Rates (not base price, seasonality, monthly, day-of-week, or global rules — those go through price-change-attribution instead). Fixed 30-day lookback, one listing at a time, reports hits only — no no-impact table, no pace-trend bucket. Use price-change-attribution instead when the user wants broader rule-type coverage, a configurable 7-/30-day window, or wants to see the misses too. Serves the Identify stage of Active Revenue Management.
+description: Fast, single-listing check of whether Custom Rates set in the last 30 days actually got booked — the simple, custom-rates-only sibling to MCP-price-change-attribution. Trigger for "did that custom rate get booked," "check if my custom rate led to bookings," "did the rate I set on [listing] work," "did my teammate's rate change book," or any quick post-hoc check specifically about Custom Rates (not base price, seasonality, monthly, day-of-week, or global rules — those go through MCP-price-change-attribution instead). Fixed 30-day lookback, one listing at a time, reports hits only — no no-impact table, no pace-trend bucket. Use MCP-price-change-attribution instead when the user wants broader rule-type coverage, a configurable 7-/30-day window, or wants to see the misses too. Serves the Identify stage of Active Revenue Management.
 ---
 
 # Custom Rate Attribution (Simple)
 
-Checks whether Custom Rates added on a single listing in the last 30 days correlate with bookings that followed. This is the narrow, custom-rates-only sibling of `price-change-attribution` — see the project instructions for shared conventions (terminology, `listing_id`+`channel` pairing, rate limiting, revenue basis). Read that skill's own SKILL.md if the user's request turns out to need the broader rule-type coverage, a configurable lookback, or a no-impact breakdown — this skill deliberately doesn't do those things.
+Checks whether Custom Rates added on a single listing in the last 30 days correlate with bookings that followed. This is the narrow, custom-rates-only sibling of `MCP-price-change-attribution`. Shared conventions: always pass `listing_id` together with its `channel`; `revenue_basis` `rent` means `nightly_subtotal` (rent only, no fees or taxes); the RM API allows 60 requests/minute, so on a `429` wait for `Retry-After` before retrying. Read that skill's own SKILL.md if the user's request turns out to need the broader rule-type coverage, a configurable lookback, or a no-impact breakdown — this skill deliberately doesn't do those things.
 
 ## When to use this skill
 
-- "Did the custom rate I set on the Luzianne get booked?"
-- "Check if Zachary's rate change on [listing] actually worked"
+- "Did the custom rate I set on [listing] get booked?"
+- "Check if my teammate's rate change on [listing] actually worked"
 - "Any bookings against the custom rates I set last week?"
 
-Not for: base price / seasonality / monthly / day-of-week / global rule changes (use `price-change-attribution`), making a new rate decision (Custom Rate Intervention workflow), or portfolio-wide scans (this is single-listing only).
+Not for: base price / seasonality / monthly / day-of-week / global rule changes (use `MCP-price-change-attribution`), making a new rate decision (`Context-CustomRates` (wheelhouse-writes, if installed)), or portfolio-wide scans (this is single-listing only).
 
 ## Inputs
 
 | Param | Value | Notes |
 |---|---|---|
 | `listing_id` + `channel` | — | Required pair, resolved via `GetListings` if not already known this session |
-| `revenue_basis` | `rent` (default) | Per project convention — state the default in output |
+| `revenue_basis` | `rent` (default) | Default for this skill — state it in output |
 
-Lookback is fixed at 30 days — not configurable. If the user wants 7 days or a different rule type, hand off to `price-change-attribution`.
+Lookback is fixed at 30 days — not configurable. If the user wants 7 days or a different rule type, hand off to `MCP-price-change-attribution`.
 
 ## Workflow
 
@@ -41,7 +41,7 @@ Keep only events where `event == "Custom rates"`. Drop everything else (`Setting
 Each event's `msg` is HTML, `<br>`-separated. Split on `<br>`. Each line matches one of:
 
 - `Fixed rate added for {start} - {end} with {values}` — type `fixed`, dollar values
-- `Automated rate added for {start} - {end} with {values}` — type `adjustment`, percentage values (the changelog calls it "Automated rate"; the API field is `adjustment` — same reconcile-terminology caveat as elsewhere in this project)
+- `Automated rate added for {start} - {end} with {values}` — type `adjustment`, percentage values (the changelog calls it "Automated rate"; the API field is `adjustment` — same reconcile-terminology caveat as elsewhere in this plugin)
 - `Fixed rate removed for {start} - {end} with {values}` / `Automated rate removed for ...`
 - `Automated rate split off for {start} - {end} with {values} (Originally created by {name})` — treat identically to "removed" for this skill's purposes
 
@@ -84,10 +84,10 @@ One table, one line per change with ≥1 qualifying booking, sorted by `added_at
 - **Edits in Window**: only show if >1.
 - **Active Until**: only show if the change was later deleted (Step 4's bounded case); otherwise leave blank.
 
-Close with 1–2 sentences: state the `revenue_basis` default if not already obvious from the table, and note this is correlation (a booking after a rate change is consistent with the change working, not proof it caused the booking) — same caveat `price-change-attribution` uses.
+Close with 1–2 sentences: state the `revenue_basis` default if not already obvious from the table, and note this is correlation (a booking after a rate change is consistent with the change working, not proof it caused the booking) — same caveat `MCP-price-change-attribution` uses.
 
 ## Edge cases
 
 - **No Custom Rates events in the window at all** — say so, skip the reservations pull entirely (no point).
-- **A range reshaped into narrower sub-ranges with the same value** — each sub-range is still independently joined; merge them for *display* only if they're contiguous and share the same value, exactly as `price-change-attribution` does.
-- **Fixed vs. Automated (adjustment) type** — display both the same way; don't imply one is "more real" than the other. Note in passing if relevant that fixed rates bypass `minimum_price_rules_v3` while adjustment rates don't (per project instructions §6) — only if the user asks why a fixed-rate custom rate posted below what they expected.
+- **A range reshaped into narrower sub-ranges with the same value** — each sub-range is still independently joined; merge them for *display* only if they're contiguous and share the same value, exactly as `MCP-price-change-attribution` does.
+- **Fixed vs. Automated (adjustment) type** — display both the same way; don't imply one is "more real" than the other. Note in passing if relevant that fixed rates bypass `minimum_price_rules_v3` while adjustment rates don't (fixed rates are constrained only by the listing's absolute floor, `min_min_price`) — only if the user asks why a fixed-rate custom rate posted below what they expected.

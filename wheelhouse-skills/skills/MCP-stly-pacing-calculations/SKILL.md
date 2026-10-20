@@ -5,11 +5,11 @@ description: Runs a Same-Time-Last-Year (STLY) pacing analysis — Nights Booked
 
 # STLY Pacing
 
-Compares current booking pace against the equivalent point in last year's booking cycle — not last year's final numbers — for Nights Booked, Revenue, ADR, and Occupancy, then derives a pace signal and actionable interpretation per period. This is workflow #3 ("Pick-Up Analysis & STLY Pacing") from the project's Identify-stage catalog.
+Compares current booking pace against the equivalent point in last year's booking cycle — not last year's final numbers — for Nights Booked, Revenue, ADR, and Occupancy, then derives a pace signal and actionable interpretation per period.
 
 Full arithmetic lives in `references/pacing-calculations.md`. The pace-signal derivation and the full interpretation-string table live in `references/pace-signal-guide.md`. Read both before computing a report the first time in a session; skim them again if a detail (e.g. an exact formula or an interpretation line) needs checking.
 
-This skill computes Revenue (Rent) and Revenue (+ Fees) only — taxes and security deposits are excluded from every figure (standard RM practice: taxes are a pass-through, deposits are a hold, neither is revenue). If the user specifically wants a taxes-inclusive `all_in` figure, that's a different workflow, not this one.
+This skill computes Revenue (Rent) and Revenue (+ Fees) only — taxes and security deposits are excluded from every figure (standard RM practice: taxes are a pass-through, deposits are a hold, neither is revenue). Revenue (Rent) comes from `nightly_subtotal`; Revenue (+ Fees) is `total_price − taxes` per the API's own definition, so it includes cleaning and other fees (see `pacing-calculations.md` §4 for the null fallback and the security-deposit check). If the user specifically wants a taxes-inclusive `all_in` figure, that's a different workflow, not this one.
 
 ---
 
@@ -29,9 +29,9 @@ Ask for a timeframe only if genuinely ambiguous; otherwise apply the defaults in
 
 ## 3. Check the call budget before running anything at scale
 
-Estimate total calls using `pacing-calculations.md` §8 (~6 calls/listing with STLY + Adjusted Occupancy both on, fewer with either off, plus 1–3 to resolve the listing set). If the estimate exceeds ~20 calls, tell the user the number and the choices before proceeding:
+Estimate total calls using `pacing-calculations.md` §8 (~6 calls/listing with STLY + Adjusted Occupancy both on, fewer with either off, plus 1–3 to resolve the listing set). If the estimate exceeds ~60 calls, tell the user the number and the choices before proceeding:
 
-> "This will run about [X] API calls across [N] listings against Wheelhouse's 20/minute limit — roughly [Y] minutes. I can (a) proceed as-is, (b) narrow the scope, or (c) skip STLY or Adjusted Occupancy for a faster pass. Which would you like?"
+> "This will run about [X] API calls across [N] listings against Wheelhouse's 60/minute default limit — roughly [Y] minutes. I can (a) proceed as-is, (b) narrow the scope, or (c) skip STLY or Adjusted Occupancy for a faster pass. Which would you like?"
 
 Wait for a choice before firing off calls at that scale. For runs at or under budget, just proceed.
 
@@ -39,13 +39,13 @@ Wait for a choice before firing off calls at that scale. For runs at or under bu
 
 For each listing in scope:
 
-1. **Reservations, current side and STLY side** — `wheelhouse_rmGetReservations` with `date_filter_type=stay_date`, the fetch windows from `pacing-calculations.md` §3 (30-day lookback, paginated to exhaustion). Filter the STLY side to `booked_at ≤ stly_cutoff_date` client-side. **Always compute Nights Booked, Revenue (Rent/Gross), ADR (Rent/Gross), and Occupancy (Unadjusted) together from this one fetch, regardless of which single KPI the user named** — they're all derived from the same rows (ADR is just Revenue ÷ Nights), so there is zero marginal API cost to having all four ready. Never re-fetch reservations to "just get ADR" or "just get nights" — that duplicates the expensive part of the call for no benefit.
+1. **Reservations, current side and STLY side** — `wheelhouse_rmGetReservations` with `date_filter_type=stay_date`, the fetch windows from `pacing-calculations.md` §3 (30-day lookback, paginated to exhaustion). Filter client-side per the status rules in `pacing-calculations.md` §3: current side keeps `status == "Accepted"` only; STLY side keeps rows with `booked_at ≤ stly_cutoff_date` that were either `Accepted` or `Canceled` with `canceled_at > stly_cutoff_date` (they were on the books at the cutoff). **Always compute Nights Booked, Revenue (Rent/Gross), ADR (Rent/Gross), and Occupancy (Unadjusted) together from this one fetch, regardless of which single KPI the user named** — they're all derived from the same rows (ADR is just Revenue ÷ Nights), so there is zero marginal API cost to having all four ready. Never re-fetch reservations to "just get ADR" or "just get nights" — that duplicates the expensive part of the call for no benefit.
 2. **Price calendar, current side and STLY side** (skip if `include_adjusted_occupancy: false`) — `wheelhouse_rmGetPriceCalendar` over the exact target window per §6 of the calculations reference. Group by `unit_number` for multi-unit listings.
 3. Pro-rate reservations across period boundaries (§4), compute all metrics and their variances (§5), compute Adjusted Occupancy (§6).
 4. Derive `pace_signal` per period from ADR (Rent) × Occupancy (Adjusted) using the dead-band table in `pace-signal-guide.md`.
 5. If a listing has no STLY data (new listing, no prior-year reservations), mark `stly_available: false` and carry it through — don't drop it from current-year totals, but exclude it from variance/signal math and call it out by name in the output.
 
-**Batching for multi-listing scope:** process in batches of ~5 listings, pausing so the running total stays under 20 requests/minute; on `429`, back off exponentially (1s → 2s → 4s → … capped at 60s, ±10–20% jitter), up to 3 retries, then record the listing in `fetch_errors` and continue with the rest.
+**Batching for multi-listing scope:** process in batches of ~5 listings, pausing so the running total stays under 60 requests/minute; on `429`, wait the `Retry-After` seconds if present, otherwise back off exponentially (1s → 2s → 4s → … capped at 60s, ±10–20% jitter), up to 3 retries, then record the listing in `fetch_errors` and continue with the rest.
 
 ## 5. Aggregate (multi-listing / segment scope only)
 
@@ -91,6 +91,8 @@ Sort chronologically. Bold the total row. Use the icon legend from `pace-signal-
 
 **Listings without STLY (segment scope only):** list them by name in their own short block so the user knows they're in current totals but out of the variance math.
 
+**Data-quality counts (only when non-zero):** one short line stating `stly_rows_undated` (STLY-side rows dropped for null `booked_at`) and the number of fee-incomplete rows (null `total_price`, so Revenue (+ Fees) fell back to `nightly_subtotal + extra_guest + extras` — see `pacing-calculations.md` §4).
+
 **Follow-up offer (segment scope, when `include_listing_detail` wasn't requested):** if any period came back non-neutral, offer a per-listing breakdown for that period, sorted by ADR pace per `pacing-calculations.md` §7.8.
 
 **Automation payloads:** if the caller is downstream automation rather than a person reading the reply, state fields only — no prose interpretation, no icons, all variance fields present even when zero. `pace_signal`, `booking_window`, and `days_to_period_end` are always included regardless.
@@ -116,10 +118,11 @@ State whichever defaults you're using in the summary if the user didn't specify 
 - **`stly_value == 0`, `current_value > 0`:** variance % is `null` (not meaningful, not zero) — see the guard in `pacing-calculations.md` §5.
 - **Multi-unit listings:** both `GetReservations` (implicitly, via the listing's units) and `GetPriceCalendar` need `unit_number` grouping — never sum across units as if they were one calendar.
 - **Currency mismatch across a segment:** group and report separately per currency (§7 of the calculations reference); never sum raw amounts across currencies.
-- **Reservation status field:** confirmed as `status` (e.g. `"Accepted"`) via a live call — filter out anything that isn't the accepted/confirmed value once a cancellation-style value is actually observed.
+- **Reservation status field:** `status`, with documented values `Accepted`, `Declined`, `Expired`, `Canceled`, `Pending`, `Ignored`. Current side counts `Accepted` only. STLY side also counts a `Canceled` row if it was booked by the cutoff and its `canceled_at` is after the cutoff — excluding it would understate STLY. Declined/Expired/Pending/Ignored never count on either side.
+- **Null `booked_at`:** can't be placed relative to the STLY cutoff — exclude from the STLY side and report the count as `stly_rows_undated`. Don't substitute `created_at` for it unless you've checked, on rows that have both, that the two agree.
 
 ## 6. Documented v1 limitations (don't build silently — say so if asked)
 
-- **No ad hoc filter scope.** Bedrooms/market/property-type filtering isn't built for v1 — only explicit listing lists and saved segments. If a user wants a filter that doesn't exist as a segment yet, the clean fast-follow is creating one via `wheelhouse_rmPostSegments`' `filter_backend` query language — that's a write action, so it needs explicit confirmation before creating it, same as any other write in this project.
+- **No ad hoc filter scope.** Bedrooms/market/property-type filtering isn't built for v1 — only explicit listing lists and saved segments. If a user wants a filter that doesn't exist as a segment yet, the clean fast-follow is creating one via `wheelhouse_rmPostSegments`' `filter_backend` query language — that's a write action, so it needs explicit confirmation before creating it, same as any other Wheelhouse write.
 - **Adjusted Occupancy's STLY side is a slightly looser comparison** than the Nights/Revenue/ADR STLY figures — see the caveat in `pacing-calculations.md` §6. Worth surfacing if a user leans heavily on the Adjusted Occupancy variance for a decision.
-- **Field names for reservation status and price_calendar's booked/blocked state are now confirmed** via a live call: reservations use `status` (only `"Accepted"` observed so far — treat other values as excluded once seen); `price_calendar` uses `is_booked`/`is_available` (booked and available are confirmed complements in every row seen; a true blocked night would be `is_available: false` AND `is_booked: false`, not yet observed live but consistent with the schema). See `pacing-calculations.md` §4 and §6.
+- **Field names for reservation status and price_calendar's booked/blocked state are now confirmed**: reservations use `status` (documented enum `Accepted`/`Declined`/`Expired`/`Canceled`/`Pending`/`Ignored`, plus `canceled_at` on canceled rows — see Edge cases above and `pacing-calculations.md` §3); `price_calendar` uses `is_booked`/`is_available` (booked and available are confirmed complements in every row seen; a true blocked night would be `is_available: false` AND `is_booked: false`, not yet observed live but consistent with the schema). See `pacing-calculations.md` §4 and §6.

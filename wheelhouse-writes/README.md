@@ -31,15 +31,15 @@ Three write surfaces, each with an interactive (MCP) skill and an unattended (di
 
 Tool names, parameter shapes, rule-array schemas, and the direct-API base URL/endpoints/rate-limit facts in this plugin were checked live against the connected Wheelhouse MCP (`Wheelhouse:search`/`get_schema`) and the RM API docs (`api.usewheelhouse.com/wheelhouse_rm_api`) as of 2026-09-15.
 
-**Live-tested 2026-09-15** (real listing, `wheelhouse_id: 64765806`, channel `hypothetical`), beyond schema-only verification:
+**Live-tested 2026-09-15** (a `hypothetical`-channel test listing), beyond schema-only verification:
 - `wheelhouse_rmBulkPutCustomRates` — bulk-wrote two non-overlapping custom rates (one `fixed`, one `adjustment`) in a single call; both landed correctly on read, no unintended splits against the listing's three pre-existing rates. Confirmed the actual response shape (previously opaque in the schema): `{"updated_custom_rates": [...]}`.
 - `wheelhouse_rmBulkDeleteCustomRates` — cleanly removed both test rates in one call; listing reverted to exactly its pre-test state on read. Confirmed the response is an empty body, not a JSON object.
 - The overlap/split/replace behavior documented in `context-custom-rates/SKILL.md` is independently corroborated by this listing's real `wheelhouse_rmGetPreferencesChangelog` history, which records past events like "Fixed rate split off," "Automated rate split off" matching the documented mechanics exactly.
 - `wheelhouse_rmPutPreferences` with a new `custom_date_ranges` entry (`id` omitted) — confirmed the server assigns a new id (a UUID) and, critically, **returns it directly in that same PUT's response body** (the full updated preferences object), so `context-events-seasons`/`-api`'s create-then-reference workflow needs no separate `GetPreferences` call to learn the assigned id. Cleaned up afterward (a second PUT with `custom_date_ranges: []`) and confirmed via read that the listing reverted to its pre-test state.
 
-Two residual gaps remain, narrower than before:
+Two residual gaps were open after the 2026-09-15 build; #1 is now closed:
 
-1. **The literal direct-API HTTP path** for bulk Custom Rates (`PUT /listings/{listing_id}/custom_rates/bulk`) is still unconfirmed by a live call — the MCP abstracts transport, so testing `wheelhouse_rmBulkPutCustomRates` (above) confirms the *operation's behavior* but not the *exact REST path* the `context-custom-rates-api` skill documents for direct-API clients. That still needs either a raw HTTP call with an API key or a fresh docs pull to fully close.
+1. ~~The literal direct-API HTTP path for bulk Custom Rates~~ — **closed 2026-10-19 by a fresh docs pull.** The correct paths are `PUT /listings/{listing_id}/bulk_custom_rates` (`rmBulkPutCustomRates`) and `DELETE /listings/{listing_id}/bulk_custom_rates` (`rmBulkDeleteCustomRates`). The path previously listed here (`/custom_rates/bulk`) was wrong.
 2. The RM API's own public `#tag/Changelog` page (dated release notes for the API itself) wasn't fully retrievable during this build. Distinct from the per-listing changelog above (which *is* now live-confirmed) — this is about whether anything shipped in the API very recently that isn't yet reflected in this plugin's documentation. Still worth a re-check before wide distribution.
 
 This is a beta API; re-verify tool schemas periodically rather than treating this plugin as permanently current.

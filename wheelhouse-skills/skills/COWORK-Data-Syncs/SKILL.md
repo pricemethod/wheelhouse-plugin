@@ -6,8 +6,8 @@ description: "Pulls and caches Wheelhouse RM data (listings + KPIs, reservations
 # Wheelhouse Data Syncs -- Direct API Key
 
 Keeps a local cache of Wheelhouse portfolio data on disk -- listings, KPIs,
-reservations, and future price calendars -- so other skills (stly-pacing,
-future-rate-overpricing, price-change-attribution, portfolio reviews, etc.)
+reservations, and future price calendars -- so other skills (MCP-stly-pacing-calculations,
+MCP-future-rate-overpricing, MCP-price-change-attribution, portfolio reviews, etc.)
 can read from files instead of calling the API live every time.
 
 **This is the direct-API-key sibling of the MCP-orchestrated Wheelhouse
@@ -215,9 +215,21 @@ of portfolio size.
 python3 scripts/sync_reservations.py --api-key-file <path>/wheelhouse_api_key.txt --out <path>/wheelhouse_data --mode rolling --verbose
 ```
 
-Fetches `stay_date >= today - 30 days` forward, filters cancellations, writes
-per-listing rolling files, and ages anything that's fallen out of that
-30-day window since the last run into the stable archive.
+Fetches `stay_date >= today - 30 days` forward, keeps only bookings (see
+"Status handling" below), writes per-listing rolling files, and ages
+anything that's fallen out of that 30-day window since the last run into the
+stable archive. A reservation falls out on the night the cutoff reaches its
+check-out date (the API's `stay_date` filter returns only `end_date >
+start_date`), so the aging step archives anything missing from the new
+fetch with `end_date <= cutoff`.
+
+**One-time re-run after the 2026-10-19 aging fix:** caches built before that
+fix lost every reservation that checked out after their last backfill (the
+old aging test was `end_date < cutoff`, which never matched). Run
+`--mode backfill --force` once (same `--years` as before) to refill the gap.
+`--force` is needed because the coverage ledger would otherwise skip
+listings already backfilled today; backfill dedupes against `stable/`, so
+nothing gets duplicated.
 
 **Historical backfill (one-time; never run automatically as part of nightly cadence):**
 
@@ -259,15 +271,26 @@ every account, and a full-year backfill can run long. If a run gets cut off,
 re-run the identical command; already-done listings skip in a fraction of a
 second.
 
-### Cancellation handling
+### Status handling (cancellations and other non-bookings)
 
-Confirmed against a real account: cancelled reservations do **not** vanish
-from the endpoint -- they persist with `status: "Canceled"` (single L,
-American spelling; `"Cancelled"` also matched). Every record with that status
-(case-insensitive) is filtered out before being written to any cache file.
-Any other status that isn't `"Accepted"` gets logged to `index.json`'s
-`unrecognized_reservation_statuses` so a genuinely new status value surfaces
-rather than being silently mishandled.
+The API documents six `status` values: `Accepted`, `Declined`, `Expired`,
+`Canceled`, `Pending`, `Ignored`. Non-bookings do **not** vanish from the
+endpoint (confirmed against a real account for `"Canceled"`, single L), so
+the script applies an allow-list (case-insensitive) before writing any cache
+file:
+
+- `Accepted` -- always kept.
+- `Pending` -- dropped by default; kept only with `--include-pending` (works
+  in both rolling and backfill modes).
+- `Declined`, `Expired`, `Ignored`, `Canceled` (`"Cancelled"` also matched)
+  -- always dropped.
+- Anything else -- dropped, and logged to `index.json`'s
+  `unrecognized_reservation_statuses` so a genuinely new status value
+  surfaces rather than being silently mishandled. The documented values are
+  never logged there.
+
+Downstream occupancy, ADR and STLY reads of `rolling/` and `stable/` rely on
+this filter to treat every cached record as a real booking.
 
 ### Output layout
 

@@ -30,7 +30,7 @@ ADR               = sum(revenue) / sum(nights)   [not divided by days — ADR is
 pct_change = (check_window_rate - baseline_rate) / baseline_rate * 100
 ```
 
-Suggested interpretation bands (consistent in spirit with the ±2% dead-band used in `stly-pacing`, widened slightly since this is a noisier daily-rate comparison rather than a longer aggregate):
+Suggested interpretation bands (consistent in spirit with the ±2% dead-band used in `MCP-stly-pacing-calculations`, widened slightly since this is a noisier daily-rate comparison rather than a longer aggregate):
 
 | `pct_change` | Read |
 |---|---|

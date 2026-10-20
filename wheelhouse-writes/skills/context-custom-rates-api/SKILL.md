@@ -42,9 +42,9 @@ These are opposite operations — confirm `rate_type` before computing, and neve
 - **Auth header:** `X-Integration-Api-Key`
 - **Get current rates:** `GET /listings/{listing_id}/custom_rates?channel={channel}`
 - **Single rate create/replace:** `PUT /listings/{listing_id}/custom_rates?channel={channel}`
-- **Bulk create/replace:** `PUT /listings/{listing_id}/custom_rates/bulk?channel={channel}` — **a distinct path from the single-rate endpoint**, not the same URL with an array body. Verify this path against current API docs before shipping a script, since it was confirmed via live docs fetch rather than the MCP schema dump during this skill's own verification and beta endpoints can shift.
-- **Single deletion:** `DELETE /listings/{listing_id}/custom_rates?channel={channel}`, body or params `start_date`/`end_date`.
-- **Bulk deletion:** `DELETE /listings/{listing_id}/custom_rates/bulk?channel={channel}`, body `delete_ranges[]`.
+- **Bulk create/replace:** `PUT /listings/{listing_id}/bulk_custom_rates?channel={channel}`, body `{"custom_rates": [...]}` — **a distinct path from the single-rate endpoint** (`bulk_custom_rates`, not `custom_rates/bulk`), not the same URL with an array body.
+- **Single deletion:** `DELETE /listings/{listing_id}/custom_rates?channel={channel}&start_date={YYYY-MM-DD}&end_date={YYYY-MM-DD}` — `start_date` and `end_date` are **required query parameters** (both inclusive), no request body.
+- **Bulk deletion:** `DELETE /listings/{listing_id}/bulk_custom_rates`, body `{"channel": "{channel}", "delete_ranges": [{"start_date": "...", "end_date": "..."}, ...]}` — `listing_id` is the only path parameter; **`channel` goes in the request body** next to `delete_ranges`, not in the query string.
 - **Custom rate history** (not current state): `GET /preferences/{listing_id}/changelog?channel={channel}`, filter `event` for `Custom rates` entries — the Custom Rates endpoints themselves report only currently-active, future-affecting rates.
 
 Rate-limit headers, `Retry-After` handling, and read-only-key behavior are identical to Context-Preferences-API — see that skill rather than duplicating here.
@@ -62,7 +62,7 @@ usage: custom_rates_update.py [--apply] [--listing LISTING_ID] [--channel CHANNE
 
 ## Running from a scheduled/unattended task
 
-Same requirement as every scheduled skill in this plugin: re-mount any dependent local directory (`--config`, API-key file, log location) via `request_cowork_directory` as the first step of every scheduled firing, per project instructions §14 — a prior run's mount does not carry over. Because this script can silently split or replace a client's existing rate periods, treat a failed mount as a hard stop, never a silent skip, and consider whether a scheduled Custom Rates script should even run unattended at all vs. always requiring a human to review the dry-run output and re-run with `--apply` manually — flag this tradeoff to the client when helping them set up the schedule rather than defaulting to full automation without discussion.
+Same requirement as every scheduled skill in this plugin: re-mount any dependent local directory (`--config`, API-key file, log location) via `request_cowork_directory` as the first step of every scheduled firing — a prior run's mount does not carry over. Because this script can silently split or replace a client's existing rate periods, treat a failed mount as a hard stop, never a silent skip, and consider whether a scheduled Custom Rates script should even run unattended at all vs. always requiring a human to review the dry-run output and re-run with `--apply` manually — flag this tradeoff to the client when helping them set up the schedule rather than defaulting to full automation without discussion.
 
 ## See also
 

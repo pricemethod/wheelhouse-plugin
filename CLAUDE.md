@@ -1,5 +1,5 @@
-# Wheelhouse Plugin
+# Wheelhouse Plugin Library
 
-Follow [AGENTS.md](AGENTS.md). For install and human setup, see [README.md](README.md).
+Maintainer instructions for this repository are in AGENTS.md (shared with other AI tools):
 
-MCP: https://mcp.usewheelhouse.com/mcp
+@AGENTS.md

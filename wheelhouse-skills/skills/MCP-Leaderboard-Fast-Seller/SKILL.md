@@ -1,11 +1,11 @@
 ---
 name: MCP-Leaderboard-Fast-Seller
-description: "Builds a live, MCP-only Top 10 of listings selling much faster than the rest of the portfolio -- pickup in the last 14 days as a share of the next 60 days' bookable inventory -- with each listing's neighborhood-occupancy-ratio shown as context, not blended into the score. Trigger on 'which listings are selling fast,' 'who's picking up quickly,' 'fastest-moving listings,' 'outpacing the market,' or any Identify-stage scan about booking velocity. Sibling to occupancy-pickup-priority-list (underperformers) -- this is the opposite signal. Offers two next steps: (1) hand off to price-change-attribution to check if a recent price/rule change, not organic demand, explains the surge; (2) a granular neighborhood-occupancy scan of this listing's unbooked nights ranked by demand -- 'opportunity days' worth a rate push. Not for one named listing's pacing (stly-pacing) or the low-occupancy list (occupancy-pickup-priority-list)."
+description: "Builds a live, MCP-only Top 10 of listings selling much faster than the rest of the portfolio -- pickup in the last 14 days as a share of the next 60 days' bookable inventory -- with each listing's neighborhood-occupancy-ratio shown as context, not blended into the score. Trigger on 'which listings are selling fast,' 'who's picking up quickly,' 'fastest-moving listings,' 'outpacing the market,' or any Identify-stage scan about booking velocity. Sibling to MCP-Leaderboard-Poor-Occ-Pickup (underperformers) -- this is the opposite signal. Offers two next steps: (1) hand off to MCP-price-change-attribution to check if a recent price/rule change, not organic demand, explains the surge; (2) a granular neighborhood-occupancy scan of this listing's unbooked nights ranked by demand -- 'opportunity days' worth a rate push. Not for one named listing's pacing (MCP-stly-pacing-calculations) or the low-occupancy list (MCP-Leaderboard-Poor-Occ-Pickup)."
 ---
 
 # Fast-Pickup Priority List
 
-The opposite signal from `occupancy-pickup-priority-list`: instead of finding
+The opposite signal from `MCP-Leaderboard-Poor-Occ-Pickup`: instead of finding
 listings that need rescue, this finds listings that are **already winning**
 so a revenue manager can ask "is there more room to push here?" Same
 live-MCP-only philosophy -- no cache/sync dependency.
@@ -45,7 +45,7 @@ live-MCP-only philosophy -- no cache/sync dependency.
 ### 1b. Gate
 
 - `automatic_rate_posting_enabled == true` (same rationale as
-  `occupancy-pickup-priority-list`).
+  `MCP-Leaderboard-Poor-Occ-Pickup`).
 - `exclude_inactive` defaults to `true` on the bulk KPI calls -- rely on it.
 - No availability gate here (unlike the low-performer list) -- a listing
   can be a legitimate fast seller even if it's nearly sold out; that's
@@ -67,7 +67,7 @@ Close with **"Which of these do you want to dig into?"**
 
 ### 2a. Price-change attribution (pure hand-off)
 
-Point directly to `price-change-attribution` for this listing: was the
+Point directly to `MCP-price-change-attribution` for this listing: was the
 pickup surge caused by a recent rate drop or rule change, or does it look
 organic? Don't reimplement that correlation here.
 
@@ -86,7 +86,7 @@ answer):
 2. `wheelhouse_rmGetNeighborhoodOccupancy` for the same listing (fetch
    once, it returns a long daily series regardless -- slice client-side to
    the target window, same convention as `GetNeighborhoodPricing`
-   elsewhere in this project).
+   elsewhere in this plugin).
 3. Join on `stay_date`. Among the **unbooked nights only**, sort descending
    by `adjusted_occupancy` (the neighborhood's demand signal for that
    date). Take the top N (5, provisional) as **opportunity days**.
@@ -97,8 +97,8 @@ answer):
 
 **Recommendation:** an opportunity day with a posted price well below
 other high-demand dates on the same listing's own calendar is worth a
-closer look for a custom-rate push (via `custom-rate-intervention`,
-confirm before writing) or a marketing nudge -- this step only surfaces
+closer look for a custom-rate push (via `Context-CustomRates` in
+wheelhouse-writes, if installed, which confirms before writing) or a marketing nudge -- this step only surfaces
 the day, it doesn't write anything.
 
 ## Call budget
@@ -106,7 +106,7 @@ the day, it doesn't write anything.
 Step 1: 4 calls regardless of portfolio size up to ~400 listings (pickup,
 nights_bookable, occupancy_neighborhood_ratio, plus the listings call for
 names/channels/automation status -- reuse the listings call from
-`occupancy-pickup-priority-list` if it ran earlier this session). Step 2b:
+`MCP-Leaderboard-Poor-Occ-Pickup` if it ran earlier this session). Step 2b:
 2 calls per listing (price calendar + neighborhood occupancy).
 
 ## Open items / provisional numbers

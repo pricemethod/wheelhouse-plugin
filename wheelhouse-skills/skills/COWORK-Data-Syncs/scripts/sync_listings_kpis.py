@@ -25,7 +25,7 @@ Pass --owned-only to restrict to owned listings only.
 Output layout (all under --out):
   listings.json              -- one JSON object keyed by "{id}_{channel}", full listing record
   kpis/{id}_{channel}.json   -- {"listing_id", "channel", "synced_at", "sync_date", "rolling": {...}, "monthly": [...]}
-  index.json                 -- sync metadata (see wheelhouse-data-sync-api SKILL.md for schema)
+  index.json                 -- sync metadata (see COWORK-Data-Syncs SKILL.md for schema)
 
 KPI trimming (to cut future read cost for consuming skills, not just this
 script's own token cost): monthly rows with adr == null are dropped -- these

@@ -9,3 +9,6 @@ wheelhouse_data/
 wheelhouse_calendar_data/
 wheelhouse_calendar_data_history/
 *.log
+
+# Local-only maintenance workspace (API snapshots, update proposals, change log)
+maintenance/

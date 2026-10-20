@@ -1,23 +1,17 @@
 ---
 name: MCP-Leaderboard-Poor-Occ-Pickup
-description: "Builds a live, MCP-only Top 10 (or N) list of listings most worth attention today, ranked by low near-term occupancy and low recent pickup, gated to listings that are actionable (automated pricing on, enough available nights). No cache/sync skill required -- pulls straight from the connected Wheelhouse MCP via wheelhouse_rmGetBulkListingKpis and wheelhouse_rmGetListings. Trigger on 'which listings need attention,' 'what should I prioritize today,' 'low occupancy report,' 'who's not booking,' or any Identify-stage scan wanting a live read over a cache. Then offers a one-listing live deep dive: overpriced vs. market, overpriced vs. own history (hands off to future-rate-overpricing), minimum price binding, and base rate vs. recommendation. Not for cache-based review (use wheelhouse-portfolio-priorities / wheelhouse-leaderboard) or a single named listing's pacing/overpricing check (use stly-pacing / future-rate-overpricing directly)."
+description: "Builds a live, MCP-only Top 10 (or N) list of listings most worth attention today, ranked by low near-term occupancy and low recent pickup, gated to listings that are actionable (automated pricing on, enough available nights). No cache/sync skill required -- pulls straight from the connected Wheelhouse MCP via wheelhouse_rmGetBulkListingKpis and wheelhouse_rmGetListings. Trigger on 'which listings need attention,' 'what should I prioritize today,' 'low occupancy report,' 'who's not booking,' or any Identify-stage scan wanting a live read over a cache. Then offers a one-listing live deep dive: overpriced vs. market, overpriced vs. own history (hands off to MCP-future-rate-overpricing), minimum price binding, and base rate vs. recommendation. Not for a single named listing's pacing/overpricing check (use MCP-stly-pacing-calculations / MCP-future-rate-overpricing directly)."
 ---
 
 # Occupancy + Pickup Priority List
 
 A live-MCP-only Top 10, and a scoped one-listing deep dive, for the Identify
 stage of Active Revenue Management. Everything here is a fresh API call --
-there is no local cache and no dependency on `wheelhouse-data-sync` or
-`wheelhouse-leaderboard`. That's the whole point of this skill: a quick,
-always-current read without needing the sync pipeline set up first.
+there is no local cache and no dependency on `COWORK-Data-Syncs`. That's
+the whole point of this skill: a quick, always-current read without
+needing a sync pipeline set up first.
 
-**Sibling skill, different data source.** `wheelhouse-portfolio-priorities`
-answers the same kind of question from a local cache (Pacing, YoY, Market
-Position, Rate Floor, Expiring Inventory) and has a much deeper listing-level
-deep dive (MLOS, changelog, notes/tags, cancellation rate, full cohort
-triangulation). Use *this* skill when the user wants something live and the
-cache either doesn't exist or isn't trusted. Use *that* skill for anything
-beyond the four checks below -- don't reimplement its Steps C-E here.
+The deep dive is deliberately limited to the four checks below.
 
 ## Step 1 — Build the ranked list
 
@@ -89,18 +83,24 @@ channel, the three underlying numbers, and the composite score. Close with
 
 Resolve `listing_id` + `channel` for the chosen listing if not already
 known this session (from the Step 1 join). Everything below is read-only
-diagnosis -- any resulting write goes through `custom-rate-intervention`
-(project instructions §9), never from here.
+diagnosis -- any resulting write goes through `Context-CustomRates`
+(wheelhouse-writes, if installed), which confirms before writing, never
+from here.
 
 ### Step 0 — Engine-active safety net
 
 Because Step 1's Gate 1 already filters to automated listings, this should
 rarely fire -- but check anyway (`wheelhouse_rmGetPreferences`:
-`automatic_rate_posting_enabled`, `base_price`) in case the list being
-worked from is stale or the user named a listing outside the Top 10
-directly. If it's off or `base_price` is null, say so as the headline
-finding and stop -- the four checks below aren't meaningful for a listing
+`automatic_rate_posting_enabled`) in case the list being worked from is
+stale or the user named a listing outside the Top 10 directly. If
+`automatic_rate_posting_enabled == false`, say so as the headline finding
+and stop -- the four checks below aren't meaningful for a listing
 Wheelhouse isn't pricing.
+
+**Don't treat `base_price: null` as "engine off."** `null` means the listing
+uses Wheelhouse's recommended base price rather than a manually set one --
+the normal, well-configured state. Note it (it matters for Step 4) and
+carry on.
 
 ### Step 1 — Market comparison
 
@@ -108,7 +108,23 @@ Wheelhouse isn't pricing.
 returns the full available horizon regardless -- slice client-side to the
 window you care about, don't call it per date range). Compare against the
 listing's own `asking_rate` for the same window (from
-`wheelhouse_rmGetListingKpis`).
+`wheelhouse_rmGetListingKpis`), **made fee-inclusive first**.
+
+**Fee basis:** neighborhood prices (`median_price`, `low_price`,
+`high_price`) include the fees guests pay on top of the nightly rate;
+`asking_rate` excludes them. Comparing the two raw biases the read toward
+"underpriced vs. market." Call `wheelhouse_rmGetFeeImpactCalendar` once
+with `fallback=estimate` (same window) and multiply the listing's price by
+`fee_multiplier` before comparing. Report the multiplier and its `source`
+in the output: `setting` (the listing's fee adjustment), `estimate`
+(estimated from recent reservations), or `none` (no fee data -- the
+multiplier is `1.0`, so the comparison is still rent-vs-fee-inclusive and
+should be flagged as biased toward "underpriced").
+
+Cleaner, if the extra call is acceptable: compare per date rather than as a
+window average -- `wheelhouse_rmGetPriceCalendar` `price` ×
+`fee_multiplier` for each open date vs. that date's `median_price` /
+`low_price` / `high_price`.
 
 **Confidence gate (added after stress-testing against a real listing --
 see `references/edge-cases.md`):**
@@ -127,7 +143,7 @@ see `references/edge-cases.md`):**
 
 ### Step 2 — Own-historicals comparison
 
-**Hand off to `future-rate-overpricing`** for the full month-by-month,
+**Hand off to `MCP-future-rate-overpricing`** for the full month-by-month,
 weekend/weekday breakdown against same-period-last-year transacted ADR.
 Don't reimplement that comparison here.
 
@@ -135,15 +151,25 @@ Don't reimplement that comparison here.
 
 `wheelhouse_rmGetPreferences`: is `minimum_price_rules_v3` non-empty, or is
 `min_min_price` sitting above the market/historical comparisons from Steps
-1-2? Cross-check with `min_price_occurrence` from `GetListingKpis` (share of
+1-2? (Floors are rent-only: compare them to the Step 1 market figures
+divided by `fee_multiplier`, not to the fee-inclusive medians.) Cross-check with `min_price_occurrence` from `GetListingKpis` (share of
 near-term nights actually pinned at the floor) when it's populated -- it's
 sometimes `null` if that stat hasn't been generated yet for the listing,
 which isn't the same as "zero occurrences."
 
 ### Step 4 — Base rate vs. recommended
 
-`wheelhouse_rmGetBasePriceRecommendation` vs. the listing's current
-`base_price`. **Weight this by `anchor_credibility`, not just the raw
+`wheelhouse_rmGetBasePriceRecommendation` returns both sides of the
+comparison in one response: compare `base_price_recommended` (and the
+`base_price_conservative` / `base_price_aggressive` band) against
+`base_price_selected`, the currently active base -- not against
+`base_price` from preferences. If `base_price` was `null` in Step 0, the
+listing is already on the recommended base, so the gap is zero by
+construction -- don't flag it. (Unverified: what `base_price_selected`
+itself reports when `base_price` is `null`; if it shows a value that
+differs from `base_price_recommended`, treat that as a caveat to mention,
+not a finding.) Optionally surface `base_price_attribution` to explain
+where a real gap comes from. **Weight this by `anchor_credibility`, not just the raw
 gap** -- a large gap at `anchor_credibility: 0` (typically a listing with
 near-zero booking history) is not a usable signal; the same-size gap at
 `anchor_credibility: 90` is.
@@ -154,7 +180,10 @@ These two checks can legitimately disagree -- a listing can be priced
 *below* the neighborhood median while its *base rate* still sits above
 Wheelhouse's own recommendation (confirmed in dry-run: a listing at ~$279
 against a ~$650 neighborhood median, yet with a $278 base price above a
-$268 aggressive recommendation at `anchor_credibility: 90`). **Present both
+$268 aggressive recommendation at `anchor_credibility: 90`). That dry run
+compared the rent-only `asking_rate` against fee-inclusive neighborhood
+prices, so part of that gap is likely fees -- apply the Step 1 fee basis
+before reading any such contradiction as real. **Present both
 findings explicitly with their confidence levels rather than collapsing
 them into one verdict.** All else equal, trust the check with the
 higher/explicit confidence score (`anchor_credibility`) over one running
@@ -165,12 +194,14 @@ just silently pick one.
 
 Step 1 (the list): 4 calls total regardless of portfolio size up to ~400
 listings (3 bulk KPI calls + 1 listings call, each paginated only if the
-portfolio exceeds 100 listings). Step 2 (one listing's deep dive): 4-5 calls
-(preferences, neighborhood pricing, listing KPIs, base price recommendation,
-plus whatever `future-rate-overpricing` uses internally for Step 2). Running
+portfolio exceeds 100 listings). Step 2 (one listing's deep dive): 5-6 calls
+(preferences, neighborhood pricing, listing KPIs, fee impact calendar, base
+price recommendation, plus the optional per-date price calendar, plus
+whatever `MCP-future-rate-overpricing` uses internally for Step 2). Running
 the deep dive across all 10 listed listings at once is a real, larger call
-volume (~40-50 calls) -- tell the user the estimate before doing that rather
-than silently running it, per the project's general >20-call rule.
+volume (~50-60 calls) -- tell the user the estimate before doing that rather
+than silently running it, since it approaches the API's 60 requests/minute
+limit -- let them proceed or narrow to fewer listings.
 
 ## Open items / provisional numbers
 
