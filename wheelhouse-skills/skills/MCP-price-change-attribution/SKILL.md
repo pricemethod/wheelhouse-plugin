@@ -1,6 +1,6 @@
 ---
 name: MCP-price-change-attribution
-description: Checks whether recent pricing changes (custom rates, seasonal/event rules, monthly rules, base price, global minimums, day-of-week, etc.) actually correlate with subsequent bookings, over a configurable 7- or 30-day lookback. Trigger for "did that price change work," "did my rate change get bookings," "check if pricing changes led to bookings," "price change impact," "did raising/lowering rates help," or any ask to review recent pricing edits against booking activity for a listing. Serves the Identify stage of Active Revenue Management — this is a post-hoc effectiveness check, distinct from MCP-stly-pacing-calculations (which compares current pace to last year, not to your own recent edits) and distinct from making a new rate change (see Context-CustomRates or Context-Preferences in wheelhouse-writes, if installed, for that). Not for forward-looking "should I change my price" recommendations — this looks backward at changes already made.
+description: Checks whether recent pricing changes (custom rates, seasonal/event rules, monthly rules, base price, global minimums, day-of-week, etc.) actually correlate with subsequent bookings, over a configurable 7- or 30-day lookback. Trigger for "did that price change work," "did my rate change get bookings," "check if pricing changes led to bookings," "price change impact," "did raising/lowering rates help," or any ask to review recent pricing edits against booking activity for a listing. Serves the Identify stage of Active Revenue Management — this is a post-hoc effectiveness check, distinct from MCP-stly-pacing-calculations (which compares current pace to last year, not to your own recent edits) and distinct from making a new rate change (see Context-CustomRates or Context-Preferences for that). Not for forward-looking "should I change my price" recommendations — this looks backward at changes already made.
 ---
 
 # Price Change Attribution
@@ -14,7 +14,7 @@ Correlates recent pricing/preference changes on a listing with the bookings that
 - "Has raising the base price hurt or helped pace?"
 - "Review the last 30 days of pricing changes against bookings"
 
-Not for: making a new pricing decision (that's `Context-CustomRates` or `Context-Preferences` in wheelhouse-writes, if installed), or comparing pace to last year (that's `MCP-stly-pacing-calculations`).
+Not for: making a new pricing decision (that's `Context-CustomRates` or `Context-Preferences`), or comparing pace to last year (that's `MCP-stly-pacing-calculations`).
 
 ## Inputs
 

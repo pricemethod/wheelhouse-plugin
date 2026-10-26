@@ -1,13 +1,13 @@
 ---
 name: MCP-future-rate-overpricing
-description: Checks whether a listing's future posted rates are too high (or too low) vs. what actually transacted the same calendar month last year, broken out by month and by weekend (Fri/Sat) vs. weekday (Sun-Thu). Trigger for "are my future rates too high," "check for overpricing next season," "is [listing] priced too aggressively for [month]," "which months are overpriced," "future rate health check," or any forward-looking ask about posted rates being out of line with historical demand. Serves the Identify stage of Active Revenue Management — distinct from MCP-stly-pacing-calculations (on-the-books pace vs. last year, not posted vs. transacted rate) and MCP-price-change-attribution (backward-looking — did an edit already made lead to bookings). Not for writing a new rate — this only flags risk; any resulting write goes through Context-CustomRates (wheelhouse-writes, if installed).
+description: Checks whether a listing's future posted rates are too high (or too low) vs. what actually transacted the same calendar month last year, broken out by month and by weekend (Fri/Sat) vs. weekday (Sun-Thu). Trigger for "are my future rates too high," "check for overpricing next season," "is [listing] priced too aggressively for [month]," "which months are overpriced," "future rate health check," or any forward-looking ask about posted rates being out of line with historical demand. Serves the Identify stage of Active Revenue Management — distinct from MCP-stly-pacing-calculations (on-the-books pace vs. last year, not posted vs. transacted rate) and MCP-price-change-attribution (backward-looking — did an edit already made lead to bookings). Not for writing a new rate — this only flags risk; any resulting write goes through Context-CustomRates.
 ---
 
 # Future Rate Overpricing Check
 
 Flags which future months (and which weekend/weekday buckets within them) a listing's posted Asking Rate looks out of line with what the listing actually transacted for during the same calendar month last year — surfacing both overpriced and underpriced risk, with market and model context layered in only where the historical signal already fired. Shared conventions: always pass `listing_id` together with its `channel`; `revenue_basis` `rent` means `nightly_subtotal` (rent only, no fees or taxes); the RM API allows 60 requests/minute, so on a `429` wait for `Retry-After` before retrying. The rest of this file covers what's specific to this workflow.
 
-**Read-only.** This skill never writes a preference, rate, or rule — it produces a diagnostic report. If the findings lead the user to want a rate change, that's `Context-CustomRates` (wheelhouse-writes, if installed), which confirms with the user before writing — not this skill.
+**Read-only.** This skill never writes a preference, rate, or rule — it produces a diagnostic report. If the findings lead the user to want a rate change, that's `Context-CustomRates`, which confirms with the user before writing — not this skill.
 
 ## When to use this skill
 
@@ -16,7 +16,7 @@ Flags which future months (and which weekend/weekday buckets within them) a list
 - "Which months look overpriced on the Smith property?"
 - "Is my base pricing tracking market, or am I just guessing at high numbers?"
 
-Not for: on-the-books pace vs. last year (`MCP-stly-pacing-calculations`), or checking whether a change you already made worked (`MCP-price-change-attribution`), or actually changing a rate (`Context-CustomRates` (wheelhouse-writes, if installed)).
+Not for: on-the-books pace vs. last year (`MCP-stly-pacing-calculations`), or checking whether a change you already made worked (`MCP-price-change-attribution`), or actually changing a rate (`Context-CustomRates`).
 
 ## Inputs
 

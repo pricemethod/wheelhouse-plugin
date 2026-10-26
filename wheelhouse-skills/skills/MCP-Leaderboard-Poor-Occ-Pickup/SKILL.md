@@ -83,8 +83,8 @@ channel, the three underlying numbers, and the composite score. Close with
 
 Resolve `listing_id` + `channel` for the chosen listing if not already
 known this session (from the Step 1 join). Everything below is read-only
-diagnosis -- any resulting write goes through `Context-CustomRates`
-(wheelhouse-writes, if installed), which confirms before writing, never
+diagnosis -- any resulting write goes through `Context-CustomRates`,
+which confirms before writing, never
 from here.
 
 ### Step 0 — Engine-active safety net

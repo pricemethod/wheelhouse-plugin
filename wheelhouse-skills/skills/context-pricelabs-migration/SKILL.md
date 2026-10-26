@@ -5,7 +5,7 @@ description: Use when a client's language or mental model comes from PriceLabs (
 
 # Context-PriceLabsMigration
 
-For a narrower audience than the rest of this plugin: a client whose vocabulary or expectations come from PriceLabs (or, more generally, another dynamic-pricing tool) rather than from Wheelhouse or general RM language. `${CLAUDE_PLUGIN_ROOT}/references/lexicon-disambiguation.md` deliberately stays scoped to Wheelhouse-native and general-industry terms — this skill is where PriceLabs-specific vocabulary and behavior get translated instead, so it doesn't dilute that file for the client base that never uses these terms.
+For a narrower audience than the other write skills in this plugin: a client whose vocabulary or expectations come from PriceLabs (or, more generally, another dynamic-pricing tool) rather than from Wheelhouse or general RM language. `${CLAUDE_PLUGIN_ROOT}/references/lexicon-disambiguation.md` deliberately stays scoped to Wheelhouse-native and general-industry terms — this skill is where PriceLabs-specific vocabulary and behavior get translated instead, so it doesn't dilute that file for the client base that never uses these terms.
 
 **This skill is a translation layer, not a write mechanism.** It never calls a write tool itself. Its job ends at "here's the Wheelhouse object(s) that request actually targets, and here's the behavioral difference to flag" — then you hand off to the skill that actually owns that write: Context-Preferences (rules/settings), Context-CustomRates (date-range overrides), or Context-Events&Seasons (season/event definitions), or their `-api` siblings for unattended scripts.
 

@@ -97,8 +97,8 @@ answer):
 
 **Recommendation:** an opportunity day with a posted price well below
 other high-demand dates on the same listing's own calendar is worth a
-closer look for a custom-rate push (via `Context-CustomRates` in
-wheelhouse-writes, if installed, which confirms before writing) or a marketing nudge -- this step only surfaces
+closer look for a custom-rate push (via `Context-CustomRates`,
+which confirms before writing) or a marketing nudge -- this step only surfaces
 the day, it doesn't write anything.
 
 ## Call budget

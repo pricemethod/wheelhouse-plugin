@@ -68,7 +68,7 @@ Offer an expiring rate (`expires_at`, ISO date-time) for anything speculative �
 4. State the full plan to the client (listing, dates, rate type, existing value, computed new value, mode, overlap warning) and get explicit confirmation of the specific values — this is stricter than a general "yes, go ahead," per the tool's own description.
 5. Write via `wheelhouse_rmPutCustomRate`/`BulkPutCustomRates`.
 6. Offer to log a note (`wheelhouse_rmPostNote`) capturing the reasoning — especially valuable for a client-requested change or a speculative event rate flagged for future review.
-7. For post-hoc verification of whether a custom rate led to bookings, hand off to the `custom-rate-attribution` skill rather than re-deriving that analysis here.
+7. For post-hoc verification of whether a custom rate led to bookings, hand off to the `MCP-custom-rate-attribution` skill rather than re-deriving that analysis here.
 
 ## See also
 
