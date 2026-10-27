@@ -3,7 +3,7 @@
 `wheelhouse_rmGetPreferencesChangelog` returns `events`, each shaped like:
 
 ```json
-{"time": "2026-07-09T13:42:22.253-07:00", "source": "User John deRoulet", "event": "Settings changed", "status": "success", "msg": "Global minimum prices modified: 99 $<br>Monthly minimum prices modified: [Jan, Feb, Mar, Jun, Jul] 150 $<br>Date-specific minimum prices modified: From Aug 01, 26 to Aug 31, 26, 70 $"}
+{"time": "2026-07-09T13:42:22.253-07:00", "source": "User Example User", "event": "Settings changed", "status": "success", "msg": "Global minimum prices modified: 99 $<br>Monthly minimum prices modified: [Jan, Feb, Mar, Jun, Jul] 150 $<br>Date-specific minimum prices modified: From Aug 01, 26 to Aug 31, 26, 70 $"}
 ```
 
 There are no structured old/new-value fields. Everything actionable is in `msg`, an HTML string. Parsing is line-by-line, not event-by-event.
@@ -51,7 +51,7 @@ Automated rate removed for Aug 22, 26 - Aug 22, 26 with Saturdays at 10.0%
 Automated rate removed for Aug 16, 26 - Aug 21, 26 with Sundays at 10.0%, ...
 Automated rate added for Aug 18, 26 - Aug 21, 26 with Tuesdays at -1.0%, ...
 Automated rate added for Aug 16, 26 - Aug 17, 26 with Sundays at 10.0%, ...
-Automated rate split off for Aug 22, 26 - Aug 22, 26 with Saturdays at -1.0% (Originally created by John deRoulet)
+Automated rate split off for Aug 22, 26 - Aug 22, 26 with Saturdays at -1.0% (Originally created by Example User)
 ```
 
 **Rule: only lines starting with "Automated rate added" or "Fixed rate added" are actionable changes.** Ignore "removed" and "split off" lines entirely — they're bookkeeping byproducts of the same edit, not separate decisions.

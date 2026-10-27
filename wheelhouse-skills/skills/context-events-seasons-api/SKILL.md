@@ -11,7 +11,7 @@ Unattended sibling of Context-Events&Seasons. Same `custom_date_ranges` two-laye
 
 ## Why this needs its own dry-run discipline, specifically
 
-Events & Seasons writes carry a risk the other two skills in this plugin don't: **the blank-id protocol changes the identifier itself**, not just a value. An unattended script that gets rule-value-only vs. definition-change wrong doesn't just write a bad number — it can silently detach listings from an Event/Season they share by id (so future UI bulk edits of it skip them), or leave a rule pointing at an id that no longer has a matching `custom_date_ranges` entry (an orphaned reference), and nothing about the write itself fails or errors when this happens. This is exactly the kind of mistake that's cheap to catch in a printed diff and expensive to catch after the fact across a client's whole portfolio.
+Events & Seasons writes carry a risk the other two write surfaces (preferences, Custom Rates) don't: **the blank-id protocol changes the identifier itself**, not just a value. An unattended script that gets rule-value-only vs. definition-change wrong doesn't just write a bad number — it can silently detach listings from an Event/Season they share by id (so future UI bulk edits of it skip them), or leave a rule pointing at an id that no longer has a matching `custom_date_ranges` entry (an orphaned reference), and nothing about the write itself fails or errors when this happens. This is exactly the kind of mistake that's cheap to catch in a printed diff and expensive to catch after the fact across a client's whole portfolio.
 
 **Dry-run by default, explicit `--apply` to write** — same mechanism as Context-Preferences-API:
 

@@ -13,7 +13,7 @@ Checks whether Custom Rates added on a single listing in the last 30 days correl
 - "Check if my teammate's rate change on [listing] actually worked"
 - "Any bookings against the custom rates I set last week?"
 
-Not for: base price / seasonality / monthly / day-of-week / global rule changes (use `MCP-price-change-attribution`), making a new rate decision (`Context-CustomRates` (wheelhouse-writes, if installed)), or portfolio-wide scans (this is single-listing only).
+Not for: base price / seasonality / monthly / day-of-week / global rule changes (use `MCP-price-change-attribution`), making a new rate decision (`Context-CustomRates`), or portfolio-wide scans (this is single-listing only).
 
 ## Inputs
 

@@ -11,28 +11,8 @@
     {
       "name": "wheelhouse-skills",
       "source": "./wheelhouse-skills",
-      "description": "Wheelhouse Revenue Management agent skills and MCP plugin. Portfolio pacing, pricing diagnostics, local data caches, and pickup priority lists for mcp.usewheelhouse.com.",
-      "version": "0.2.1",
-      "author": {
-        "name": "Wheelhouse",
-        "email": "support@usewheelhouse.com"
-      },
-      "license": "Apache-2.0",
-      "keywords": [
-        "hospitality",
-        "mcp",
-        "pricing",
-        "revenue-management",
-        "short-term-rental",
-        "wheelhouse"
-      ],
-      "category": "productivity"
-    },
-    {
-      "name": "wheelhouse-writes",
-      "source": "./wheelhouse-writes",
-      "description": "Write-capable Wheelhouse RM guidance: preferences/rule hierarchy, Events & Seasons ID resolution, and Custom Rates, each as an MCP-orchestrated (interactive, confirm-before-write) skill and a direct-API (dry-run/--apply) skill, plus a PriceLabs terminology/capability migration reference for clients building on the API from another pricing tool.",
-      "version": "0.2.9",
+      "description": "Wheelhouse Revenue Management agent skills and MCP plugin for mcp.usewheelhouse.com. Read: portfolio pacing, pricing diagnostics, leaderboards, occupancy-vs-market charts, a portfolio map and local data caches. Write: preferences, Events & Seasons and Custom Rates (confirm-before-write MCP skills and dry-run/--apply API skills), plus a PriceLabs migration reference.",
+      "version": "0.3.0",
       "author": {
         "name": "Wheelhouse",
         "email": "support@usewheelhouse.com"
@@ -40,12 +20,15 @@
       "license": "Apache-2.0",
       "keywords": [
         "custom-rates",
+        "hospitality",
+        "mcp",
         "migration",
-        "pricelabs",
         "preferences",
+        "pricelabs",
         "pricing",
         "revenue-management",
         "seasons",
+        "short-term-rental",
         "wheelhouse"
       ],
       "category": "productivity"

@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Property Portfolio Map</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@700;800&family=Inter:wght@400;500;600&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<style>
+  :root{
+    /* Wheelhouse design system */
+    --brand: #E80EDF;
+    --brand-deep: #BD08B6;
+    --brand-neon: #FD25F5;
+    --brand-darkest: #650761;
+    --brand-tint: #FCE0FA;
+    --sky: #57B0E0;
+    --sky-tint: #E1F1FA;
+    --green: #15A06B;
+    --green-tint: #DCF5EC;
+    --mint: #2BC78F;
+    --red: #E5484D;
+    --red-tint: #FDEBEC;
+    --amber: #E8A317;
+    --amber-tint: #FDF2DA;
+    --ink: #1A1A1A;
+    --body-text: #2B2B2B;
+    --muted: #878787;
+    --border: #DCDBDB;
+    --page: #F5F5F4;
+    --card: #FFFFFF;
+    --font-headline: 'Hanken Grotesk', -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    --font-body: 'Inter', -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    --font-mono: 'Space Mono', "Courier New", monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    font-family: var(--font-body);
+    color: var(--body-text);
+    background: var(--page);
+  }
+  .app{
+    display:flex;
+    flex-direction:column;
+    height:100vh;
+    min-height:560px;
+  }
+  header{
+    background: var(--card);
+    color: var(--ink);
+    padding: 18px 24px 16px;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:8px;
+    border-bottom: 1px solid var(--border);
+  }
+  header h1{
+    font-family: var(--font-headline);
+    font-size: 22px;
+    font-weight: 800;
+    margin:0;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+    color: var(--ink);
+  }
+  header .tagline{
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-top: 5px;
+  }
+  .count-wrap{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .count{
+    font-size: 13px;
+    color: var(--body-text);
+    background: var(--page);
+    border: 1px solid var(--border);
+    padding: 6px 14px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .count strong{
+    color: var(--brand-deep);
+    font-size: 15px;
+  }
+  .list-btn{
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    background: var(--brand);
+    border: none;
+    padding: 9px 18px;
+    border-radius: 999px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+  }
+  .list-btn:hover{ background: var(--brand-deep); }
+
+  .body{
+    flex:1;
+    display:flex;
+    min-height:0;
+  }
+  .sidebar{
+    width: 264px;
+    flex-shrink:0;
+    background: var(--card);
+    border-right: 1px solid var(--border);
+    padding: 20px 18px 18px;
+    overflow-y:auto;
+  }
+  .sidebar h2{
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin: 0 0 10px;
+    font-weight: 700;
+  }
+  .filter-block{
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .filter-block:last-child{ border-bottom:none; }
+
+  /* Chip filter: numeric/categorical field, e.g. Bedrooms */
+  .chip-grid{
+    display:flex;
+    flex-wrap:wrap;
+    gap: 6px;
+  }
+  .chip{
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--body-text);
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 7px 0;
+    width: 42px;
+    text-align:center;
+    border-radius: 999px;
+    cursor:pointer;
+    user-select:none;
+    transition: all 0.15s;
+  }
+  .chip:hover{ border-color: var(--brand); }
+  .chip.active{
+    background: var(--brand);
+    border-color: var(--brand);
+    color: #fff;
+  }
+  .chip-actions{
+    margin-top:10px;
+    display:flex;
+    gap:14px;
+  }
+  .chip-actions a{
+    font-size: 11.5px;
+    color: var(--brand-deep);
+    cursor:pointer;
+    text-decoration: underline;
+  }
+
+  /* Amenities filter: multi-select checklist, OR-matching against a
+     list-valued field. Any listing that has AT LEAST ONE checked amenity
+     matches; if nothing is checked, all listings pass this filter. */
+  .amenity-list{
+    display:flex;
+    flex-direction:column;
+    gap: 7px;
+    max-height: 220px;
+    overflow-y:auto;
+  }
+  .amenity-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size: 12.5px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .amenity-row input{ cursor:pointer; flex-shrink:0; }
+  .amenity-row .amenity-count{
+    color: var(--muted);
+    font-size:11px;
+    margin-left:auto;
+  }
+  .amenity-actions{
+    margin-top:10px;
+    display:flex;
+    gap:14px;
+  }
+  .amenity-actions a{
+    font-size: 11.5px;
+    color: var(--brand-deep);
+    cursor:pointer;
+    text-decoration: underline;
+  }
+
+  .empty-note{
+    font-size: 12px;
+    line-height:1.5;
+    color: var(--body-text);
+    background: var(--amber-tint);
+    border: 1px solid var(--amber);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-top: 4px;
+  }
+
+  .map-wrap{
+    position: relative;
+    flex: 1;
+    min-width: 0;
+  }
+  .map-wrap #map{ height:100%; width:100%; }
+
+  .leaflet-popup-content-wrapper{
+    background: var(--card);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 18px rgba(26,26,26,0.14);
+  }
+  .leaflet-popup-tip{ background: var(--card); }
+  .pop{
+    font-family: var(--font-body);
+    min-width: 200px;
+    max-width: 260px;
+  }
+  .pop .pname{
+    font-family: var(--font-headline);
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--ink);
+    margin: 0 0 4px;
+    line-height:1.15;
+  }
+  .pop .pnick{
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin: 0 0 6px;
+    text-transform: uppercase;
+  }
+  .pop .paddr{
+    font-size: 12px;
+    color: var(--body-text);
+    margin: 0 0 8px;
+    line-height:1.35;
+  }
+  .pop .pids{
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--muted);
+    margin: 0 0 8px;
+    line-height:1.4;
+  }
+  .pop .ptags{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+  }
+  .pop .tag{
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+  .pop .tag.bed{
+    background: var(--brand-tint);
+    color: var(--brand-deep);
+  }
+  .pop .tag.amenity{
+    background: var(--sky-tint);
+    color: var(--body-text);
+  }
+
+  /* List panel */
+  .list-panel{
+    position:absolute;
+    top:0; right:0; bottom:0;
+    width: 560px;
+    max-width: 94%;
+    background: var(--card);
+    box-shadow: -6px 0 24px rgba(26,26,26,0.14);
+    z-index: 1000;
+    display:flex;
+    flex-direction:column;
+    transform: translateX(100%);
+    transition: transform 0.22s ease;
+  }
+  .list-panel.open{ transform: translateX(0); }
+
+  .list-header{
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--border);
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap: 10px;
+  }
+  .list-header h3{
+    font-family: var(--font-headline);
+    font-size: 16px;
+    font-weight: 800;
+    margin: 0 0 4px;
+    color: var(--ink);
+  }
+  .list-header .sub{
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .list-close{
+    border:none;
+    background:none;
+    font-size: 20px;
+    line-height:1;
+    color: var(--muted);
+    cursor:pointer;
+    padding: 2px 4px;
+  }
+  .list-close:hover{ color: var(--ink); }
+
+  .list-controls{
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap: 10px;
+    flex-wrap:wrap;
+  }
+  .view-check{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    font-size: 12.5px;
+    color: var(--body-text);
+    cursor:pointer;
+    user-select:none;
+  }
+  .view-check input{ cursor:pointer; }
+
+  .export-btn{
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #fff;
+    background: var(--sky);
+    border: none;
+    padding: 7px 16px;
+    border-radius: 999px;
+    cursor:pointer;
+    transition: background 0.15s;
+  }
+  .export-btn:hover{ background: #3f95c2; }
+  .export-btn:disabled{
+    background: var(--border);
+    color: var(--muted);
+    cursor:not-allowed;
+  }
+
+  .copy-ids-note{
+    font-size: 12px;
+    color: var(--body-text);
+    background: var(--sky-tint);
+    border: 1px solid var(--sky);
+    border-radius: 8px;
+    padding: 8px 10px;
+    margin: 0 16px 10px;
+    word-break: break-all;
+  }
+  .copy-ids-note.success{
+    border-color: var(--green);
+    background: var(--green-tint);
+  }
+  .copy-ids-note textarea{
+    width:100%;
+    margin-top:6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding:6px;
+    border-radius:6px;
+    border:1px solid var(--border);
+    resize: vertical;
+  }
+
+  .list-body{
+    flex:1;
+    overflow-y:auto;
+  }
+  table.list-table{
+    width:100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    font-family: var(--font-body);
+  }
+  table.list-table thead th{
+    position: sticky;
+    top:0;
+    background: var(--page);
+    text-align:left;
+    padding: 8px 9px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  table.list-table td{
+    padding: 9px 9px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  table.list-table tr:hover td{ background: var(--page); }
+  .row-name{ font-weight:700; color: var(--ink); }
+  .row-sub{ color: var(--muted); font-size: 10.5px; font-family: var(--font-mono); }
+  .row-addr{ color: var(--body-text); }
+  .row-badge{
+    display:inline-block;
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 2px 9px;
+    border-radius: 999px;
+    background: var(--sky-tint);
+    color: var(--body-text);
+    margin: 1px 3px 1px 0;
+    white-space: nowrap;
+  }
+
+  .list-empty{
+    padding: 30px 18px;
+    text-align:center;
+    color: var(--muted);
+    font-size: 13px;
+    line-height:1.6;
+  }
+
+  @media (max-width: 720px){
+    .sidebar{ width: 200px; padding: 14px 12px; }
+    header h1{ font-size:18px; }
+    header .tagline{ display:none; }
+    .chip{ width: 36px; font-size: 11.5px; }
+    .list-panel{ width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <h1>Property Portfolio Map</h1>
+      <div class="tagline">Filter by bedrooms and amenities</div>
+    </div>
+    <div class="count-wrap">
+      <div class="count"><strong id="countNum">0</strong> of <span id="totalNum">0</span> properties shown</div>
+      <button class="list-btn" id="openListBtn">View list</button>
+    </div>
+  </header>
+  <div class="body">
+    <div class="sidebar">
+      <div class="filter-block">
+        <h2>Bedrooms</h2>
+        <div class="chip-grid" id="chipGrid"></div>
+        <div class="chip-actions">
+          <a id="chipAll">select all</a>
+          <a id="chipNone">clear</a>
+        </div>
+      </div>
+
+      <div class="filter-block">
+        <h2>Amenities</h2>
+        <div class="amenity-list" id="amenityList"></div>
+        <div class="amenity-actions">
+          <a id="amenityClear">clear</a>
+        </div>
+      </div>
+
+      <div id="emptyNote" style="display:none;" class="empty-note">
+        No properties match these filters. Try widening your bedroom selection or unchecking some amenities.
+      </div>
+    </div>
+    <div class="map-wrap">
+      <div id="map"></div>
+      <div class="list-panel" id="listPanel">
+        <div class="list-header">
+          <div>
+            <h3>Matching properties</h3>
+            <div class="sub" id="listSub">0 properties</div>
+          </div>
+          <button class="list-close" id="closeListBtn" aria-label="Close list">&times;</button>
+        </div>
+        <div class="list-controls">
+          <label class="view-check">
+            <input type="checkbox" id="viewportCheck">
+            Only homes in current map view
+          </label>
+          <button class="export-btn" id="copyIdsBtn" title="Copy Wheelhouse IDs of the properties currently listed, to paste back to Claude for tagging">Copy IDs</button>
+          <button class="export-btn" id="exportBtn">Export CSV</button>
+        </div>
+        <div class="copy-ids-note" id="copyIdsNote" style="display:none;"></div>
+        <div class="list-body" id="listBody"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/*
+ * Expected record shape (one object per unit/listing). Only lat/lng/Name
+ * are strictly required by the JS below — everything else is displayed if
+ * present. Adapt field names below (search for CHIP_FIELD / AMENITY_FIELD)
+ * to match whatever the data source actually calls them.
+ *
+ * {
+ *   "Name": "...",            // unit/listing name (e.g. Wheelhouse `title`)
+ *   "Nickname": "...",        // internal nickname, if any
+ *   "WheelhouseId": "...",    // unit ID — required (Wheelhouse's wheelhouse_id)
+ *   "ChannelId": "...",       // optional: channel-side id (Airbnb/VRBO/etc), if easily available
+ *   "Channel": "...",         // optional: which channel ChannelId belongs to
+ *   "Address": "...",
+ *   "Bedrooms": 3,            // CHIP_FIELD: numeric/categorical filter field
+ *   "Amenities": ["Waterfront","Dock","Hot Tub"],  // AMENITY_FIELD: list of tags
+ *   "lat": 43.5, "lng": -71.4
+ * }
+ */
+const CHIP_FIELD = 'Bedrooms';
+const AMENITY_FIELD = 'Amenities';
+
+const PROPERTIES = __DATA__;
+
+// ---- derive chip filter options (numeric/categorical field) ----
+const chipCounts = {};
+PROPERTIES.forEach(p => {
+  const v = p[CHIP_FIELD];
+  chipCounts[v] = (chipCounts[v] || 0) + 1;
+});
+const chipValues = Object.keys(chipCounts).sort((a, b) => {
+  const na = Number(a), nb = Number(b);
+  if (!isNaN(na) && !isNaN(nb)) return na - nb;
+  return String(a).localeCompare(String(b));
+});
+
+let activeChips = new Set(chipValues);
+
+const chipGrid = document.getElementById('chipGrid');
+chipValues.forEach(v => {
+  const chip = document.createElement('div');
+  chip.className = 'chip active';
+  chip.textContent = /^\d+$/.test(v) ? v + 'BR' : v;
+  chip.dataset.val = v;
+  chip.title = chipCounts[v] + ' propert' + (chipCounts[v] === 1 ? 'y' : 'ies');
+  chip.addEventListener('click', () => {
+    if (activeChips.has(v)) { activeChips.delete(v); chip.classList.remove('active'); }
+    else { activeChips.add(v); chip.classList.add('active'); }
+    refresh();
+  });
+  chipGrid.appendChild(chip);
+});
+document.getElementById('chipAll').addEventListener('click', () => {
+  activeChips = new Set(chipValues);
+  document.querySelectorAll('.chip').forEach(c => c.classList.add('active'));
+  refresh();
+});
+document.getElementById('chipNone').addEventListener('click', () => {
+  activeChips = new Set();
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  refresh();
+});
+
+// ---- derive amenity filter options (list-valued field, OR-matching) ----
+const amenityCounts = {};
+PROPERTIES.forEach(p => {
+  const list = Array.isArray(p[AMENITY_FIELD]) ? p[AMENITY_FIELD] : [];
+  list.forEach(a => { amenityCounts[a] = (amenityCounts[a] || 0) + 1; });
+});
+const amenityValues = Object.keys(amenityCounts).sort((a, b) => amenityCounts[b] - amenityCounts[a]);
+
+let activeAmenities = new Set(); // empty set = no amenity filter applied (show all)
+
+const amenityListEl = document.getElementById('amenityList');
+amenityValues.forEach(a => {
+  const row = document.createElement('label');
+  row.className = 'amenity-row';
+  row.innerHTML = `<input type="checkbox" data-amenity="${escapeHtmlAttr(a)}"> ${escapeHtml(a)} <span class="amenity-count">${amenityCounts[a]}</span>`;
+  const input = row.querySelector('input');
+  input.addEventListener('change', () => {
+    if (input.checked) activeAmenities.add(a);
+    else activeAmenities.delete(a);
+    refresh();
+  });
+  amenityListEl.appendChild(row);
+});
+document.getElementById('amenityClear').addEventListener('click', () => {
+  activeAmenities = new Set();
+  document.querySelectorAll('.amenity-row input').forEach(i => { i.checked = false; });
+  refresh();
+});
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str == null ? '' : String(str);
+  return div.innerHTML;
+}
+function escapeHtmlAttr(str) {
+  return escapeHtml(str).replace(/"/g, '&quot;');
+}
+
+// ---- map setup ----
+const map = L.map('map', { zoomControl: true }).setView([43.3, -73.9], 8);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap contributors',
+  maxZoom: 18
+}).addTo(map);
+
+const amenityColor = '#E80EDF'; // brand magenta highlights the special case
+const baseColor = '#878787'; // muted neutral for the default/unremarkable case
+
+function makeIcon(hasAnyAmenity) {
+  const color = hasAnyAmenity ? amenityColor : baseColor;
+  return L.divIcon({
+    className: '',
+    html: `<div style="width:14px;height:14px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,0.3);"></div>`,
+    iconSize: [14, 14],
+    iconAnchor: [7, 7],
+    popupAnchor: [0, -8]
+  });
+}
+
+const markers = PROPERTIES.map(p => {
+  const amenities = Array.isArray(p[AMENITY_FIELD]) ? p[AMENITY_FIELD] : [];
+  const marker = L.marker([p.lat, p.lng], { icon: makeIcon(amenities.length > 0) });
+
+  const idsLine = [
+    p.WheelhouseId ? `Wheelhouse ID: ${escapeHtml(p.WheelhouseId)}` : null,
+    (p.ChannelId && p.Channel) ? `${escapeHtml(p.Channel)} ID: ${escapeHtml(p.ChannelId)}` : null
+  ].filter(Boolean).join(' &middot; ');
+
+  const amenityTags = amenities.map(a => `<span class="tag amenity">${escapeHtml(a)}</span>`).join('');
+  const bedTag = (p[CHIP_FIELD] !== undefined && p[CHIP_FIELD] !== null)
+    ? `<span class="tag bed">${escapeHtml(p[CHIP_FIELD])}${/^\d+$/.test(String(p[CHIP_FIELD])) ? ' BR' : ''}</span>`
+    : '';
+
+  const popupHtml = `
+    <div class="pop">
+      <p class="pname">${escapeHtml(p.Name)}</p>
+      ${p.Nickname ? `<p class="pnick">${escapeHtml(p.Nickname)}</p>` : ''}
+      <p class="paddr">${escapeHtml(p.Address)}</p>
+      ${idsLine ? `<p class="pids">${idsLine}</p>` : ''}
+      <div class="ptags">${bedTag}${amenityTags}</div>
+    </div>`;
+  marker.bindPopup(popupHtml, { closeButton: false, offset: [0, -2] });
+  marker.on('mouseover', function () { this.openPopup(); });
+  marker.on('mouseout', function () { this.closePopup(); });
+  marker._meta = p;
+  return marker;
+});
+
+const markerLayer = L.layerGroup(markers).addTo(map);
+
+function matchesFilters(p) {
+  const chipOk = activeChips.has(String(p[CHIP_FIELD]));
+  const amenities = Array.isArray(p[AMENITY_FIELD]) ? p[AMENITY_FIELD] : [];
+  const amenityOk = activeAmenities.size === 0 || amenities.some(a => activeAmenities.has(a));
+  return chipOk && amenityOk;
+}
+
+function refresh() {
+  let visible = 0;
+  markers.forEach(m => {
+    const show = matchesFilters(m._meta);
+    if (show) {
+      if (!markerLayer.hasLayer(m)) markerLayer.addLayer(m);
+      visible++;
+    } else {
+      if (markerLayer.hasLayer(m)) markerLayer.removeLayer(m);
+    }
+  });
+  document.getElementById('countNum').textContent = visible;
+  document.getElementById('totalNum').textContent = PROPERTIES.length;
+  document.getElementById('emptyNote').style.display = visible === 0 ? 'block' : 'none';
+  if (listPanel.classList.contains('open')) renderList();
+}
+
+// ---- list view / CSV export ----
+const listPanel = document.getElementById('listPanel');
+const listBody = document.getElementById('listBody');
+const listSub = document.getElementById('listSub');
+const viewportCheck = document.getElementById('viewportCheck');
+const exportBtn = document.getElementById('exportBtn');
+
+let currentListData = [];
+
+function getListData() {
+  const limitToView = viewportCheck.checked;
+  const bounds = limitToView ? map.getBounds() : null;
+  return PROPERTIES.filter(p => {
+    if (!matchesFilters(p)) return false;
+    if (limitToView && !bounds.contains([p.lat, p.lng])) return false;
+    return true;
+  });
+}
+
+function renderList() {
+  currentListData = getListData();
+  const n = currentListData.length;
+  listSub.textContent = n + ' propert' + (n === 1 ? 'y' : 'ies') +
+    (viewportCheck.checked ? ' in current map view' : ' matching filters');
+  exportBtn.disabled = n === 0;
+
+  if (n === 0) {
+    listBody.innerHTML = '<div class="list-empty">No properties match right now. Try adjusting your filters' +
+      (viewportCheck.checked ? ', or pan/zoom the map to include more homes.' : '.') + '</div>';
+    return;
+  }
+
+  const rows = currentListData.map(p => {
+    const amenities = Array.isArray(p[AMENITY_FIELD]) ? p[AMENITY_FIELD] : [];
+    const idsSub = [
+      p.WheelhouseId ? `WH: ${escapeHtml(p.WheelhouseId)}` : null,
+      (p.ChannelId && p.Channel) ? `${escapeHtml(p.Channel)}: ${escapeHtml(p.ChannelId)}` : null
+    ].filter(Boolean).join(' &middot; ');
+    return `<tr>
+      <td>
+        <div class="row-name">${escapeHtml(p.Name)}</div>
+        ${p.Nickname ? `<div class="row-sub">${escapeHtml(p.Nickname)}</div>` : ''}
+        ${idsSub ? `<div class="row-sub">${idsSub}</div>` : ''}
+      </td>
+      <td class="row-addr">${escapeHtml(p.Address)}</td>
+      <td>${escapeHtml(p[CHIP_FIELD])}</td>
+      <td>${amenities.map(a => `<span class="row-badge">${escapeHtml(a)}</span>`).join('')}</td>
+    </tr>`;
+  }).join('');
+
+  listBody.innerHTML = `<table class="list-table">
+    <thead><tr><th>Name</th><th>Address</th><th>Beds</th><th>Amenities</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+function openList() {
+  listPanel.classList.add('open');
+  renderList();
+}
+function closeList() {
+  listPanel.classList.remove('open');
+}
+
+document.getElementById('openListBtn').addEventListener('click', openList);
+document.getElementById('closeListBtn').addEventListener('click', closeList);
+viewportCheck.addEventListener('change', renderList);
+map.on('moveend zoomend', () => {
+  if (listPanel.classList.contains('open') && viewportCheck.checked) renderList();
+});
+
+function csvEscape(val) {
+  const s = String(val ?? '');
+  if (/[",\n]/.test(s)) {
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  return s;
+}
+
+exportBtn.addEventListener('click', () => {
+  if (currentListData.length === 0) return;
+  const header = ['Name', 'Nickname', 'WheelhouseId', 'ChannelId', 'Channel', 'Address', CHIP_FIELD, AMENITY_FIELD];
+  const lines = [header.join(',')];
+  currentListData.forEach(p => {
+    const amenities = Array.isArray(p[AMENITY_FIELD]) ? p[AMENITY_FIELD] : [];
+    lines.push([
+      csvEscape(p.Name),
+      csvEscape(p.Nickname),
+      csvEscape(p.WheelhouseId),
+      csvEscape(p.ChannelId),
+      csvEscape(p.Channel),
+      csvEscape(p.Address),
+      csvEscape(p[CHIP_FIELD]),
+      csvEscape(amenities.join('; '))
+    ].join(','));
+  });
+  const csvContent = lines.join('\r\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `properties_${stamp}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+// ---- copy Wheelhouse IDs, for pasting back to Claude to write tags ----
+const copyIdsBtn = document.getElementById('copyIdsBtn');
+const copyIdsNote = document.getElementById('copyIdsNote');
+
+copyIdsBtn.addEventListener('click', async () => {
+  const data = getListData();
+  if (data.length === 0) {
+    copyIdsNote.className = 'copy-ids-note';
+    copyIdsNote.style.display = 'block';
+    copyIdsNote.textContent = 'No properties match right now — adjust filters or the map view first.';
+    return;
+  }
+  const ids = data.map(p => p.WheelhouseId).filter(id => id !== undefined && id !== null);
+  const idText = ids.join(', ');
+  const label = data.length + ' propert' + (data.length === 1 ? 'y' : 'ies') +
+    (viewportCheck.checked ? ' in the current map view' : ' matching filters');
+
+  let copied = false;
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(idText);
+      copied = true;
+    }
+  } catch (e) { /* fall through to manual copy */ }
+
+  copyIdsNote.className = 'copy-ids-note' + (copied ? ' success' : '');
+  copyIdsNote.style.display = 'block';
+  if (copied) {
+    copyIdsNote.innerHTML = `Copied ${ids.length} Wheelhouse ID${ids.length === 1 ? '' : 's'} (${escapeHtml(label)}) to your clipboard. ` +
+      `Paste these into your chat with Claude along with the tag(s) you want, e.g. "add the tag Ski to these listings: ${escapeHtml(idText.slice(0, 40))}${idText.length > 40 ? '…' : ''}"`;
+  } else {
+    copyIdsNote.innerHTML = `Couldn't auto-copy (clipboard access blocked here). Select and copy the IDs below, then paste them into your chat with Claude along with the tag(s) you want:` +
+      `<textarea readonly rows="3" onclick="this.select()">${escapeHtml(idText)}</textarea>`;
+  }
+});
+
+refresh();
+</script>
+</body>
+</html>

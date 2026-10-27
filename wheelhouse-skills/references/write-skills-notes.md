@@ -1,10 +1,10 @@
-# Wheelhouse Writes
+# Write Skills — Design Notes and Verification
 
-Write-capable guidance for the Wheelhouse Revenue Management API/MCP: the procedural knowledge needed to make changes safely, not just read data. Companion to the read-only `wheelhouse-skills` (sync/cache/leaderboard skills) — kept as a separate plugin deliberately, so a client's decision to let Claude *read* their Wheelhouse data and their decision to let Claude *write* to it stay two distinct choices.
+Notes on the write-capable skills in this plugin: the procedural knowledge needed to make changes safely, not just read data. These skills used to ship as a separate `wheelhouse-writes` plugin; since version 0.3.0 they ship in `wheelhouse-skills` alongside the read-only skills.
 
-## What's in this plugin
+## The write skills
 
-Three write surfaces, each with an interactive (MCP) skill and an unattended (direct-API) sibling; one migration/translation skill for a narrower audience; and two shared references:
+Three write surfaces, each with an interactive (MCP) skill and an unattended (direct-API) sibling; one migration/translation skill for a narrower audience; and two shared references in this plugin's `references/` folder:
 
 | Skill | Covers |
 |---|---|
