@@ -1,0 +1,386 @@
+{
+  "_about": "Machine-readable map of the templates. tools/check_templates.py keeps it, the templates and the fixture briefs in step. 'uses' lists every placeholder a template (with its includes) can contain.",
+  "types": [
+    "software",
+    "data-analysis",
+    "other"
+  ],
+  "sizes": [
+    "lite",
+    "standard",
+    "full"
+  ],
+  "placeholders": {
+    "project_name": {
+      "source": "brief",
+      "description": "The project's name, as the user says it."
+    },
+    "one_liner": {
+      "source": "brief",
+      "description": "One sentence: what it is and who it is for."
+    },
+    "project_type": {
+      "source": "brief",
+      "description": "software, data-analysis or other (selects the variant)."
+    },
+    "size": {
+      "source": "brief",
+      "description": "lite, standard or full (how much package the project needs)."
+    },
+    "size_reason": {
+      "source": "brief",
+      "description": "One plain sentence: why this size was chosen (or that the owner chose it, and why)."
+    },
+    "owner_name": {
+      "source": "brief",
+      "description": "Who owns the plan and makes every decision in it."
+    },
+    "audience": {
+      "source": "brief",
+      "description": "Who will use it, or read it."
+    },
+    "success_definition": {
+      "source": "brief",
+      "description": "What success looks like, in the user's words."
+    },
+    "in_scope": {
+      "source": "brief",
+      "description": "What is being done."
+    },
+    "out_of_scope": {
+      "source": "brief",
+      "description": "What is deliberately not being done."
+    },
+    "later_ideas": {
+      "source": "brief",
+      "description": "Ideas parked for later."
+    },
+    "systems": {
+      "source": "brief",
+      "description": "Systems, accounts and tools it connects to (or 'None')."
+    },
+    "data_sources": {
+      "source": "brief",
+      "description": "Data and files it uses (or 'None')."
+    },
+    "real_world_changes": {
+      "source": "brief",
+      "description": "'yes' or 'no', then a sentence: can it send, publish, delete or change real data?"
+    },
+    "shape": {
+      "source": "brief",
+      "description": "How the finished thing is used and kept up to date, chosen from the answers: with Claude when asked; a finished document or file; a page the team uses that Claude refreshes; Claude refreshes it on a schedule (needs Cowork); or software that runs without Claude (Cowork or Claude Code). One sentence."
+    },
+    "shape_reason": {
+      "source": "brief",
+      "description": "Which answers led to that shape, in one sentence, so the choice can be revisited."
+    },
+    "shape_switch_if": {
+      "source": "brief",
+      "description": "What would mean a different shape is needed (for example: it must update itself with nobody asking; people outside Claude need it; it must feed another system). Checked whenever something is added."
+    },
+    "never_events": {
+      "source": "brief",
+      "description": "The mistakes that would be costly and must never happen."
+    },
+    "look_and_feel": {
+      "source": "brief",
+      "description": "Look, feel and words (software), or format, audience and tone (documents, analysis)."
+    },
+    "devices": {
+      "source": "brief",
+      "description": "Devices it must work on (software only)."
+    },
+    "constraints": {
+      "source": "brief",
+      "description": "Deadlines, required or forbidden tools, budget, who reviews."
+    },
+    "deadline": {
+      "source": "brief",
+      "description": "The date that matters most, as YYYY-MM-DD, or 'None'."
+    },
+    "review_cadence": {
+      "source": "brief",
+      "description": "How often to pause for the user's review."
+    },
+    "commit_policy": {
+      "source": "brief",
+      "description": "When to save snapshots of the work (never unless asked, or after each story)."
+    },
+    "comfort_level": {
+      "source": "brief",
+      "description": "How much technical detail the user wants (tunes wording only)."
+    },
+    "open_items": {
+      "source": "brief",
+      "description": "Open questions and unknowns, each to be answered early."
+    },
+    "key_terms": {
+      "source": "brief",
+      "description": "The project's own words and what they mean."
+    },
+    "today": {
+      "source": "computed",
+      "description": "The date the package is generated."
+    },
+    "phases_heading": {
+      "source": "computed",
+      "description": "'Order of work' for Lite, 'Phases' for Standard and Full."
+    },
+    "package_files": {
+      "source": "computed",
+      "description": "The files written into this package, listed."
+    },
+    "package_check": {
+      "source": "computed",
+      "description": "What the package check found, written after it runs (for example 'scripts/check_package.py: 0 errors, 0 warnings')."
+    }
+  },
+  "parts": [
+    "house-rules.md",
+    "log-format.md",
+    "review-gates.md",
+    "story-format.md",
+    "testing-data.md",
+    "testing-other.md",
+    "testing-software.md"
+  ],
+  "files": [
+    {
+      "template": "START-HERE.md",
+      "output": "START-HERE.md",
+      "types": "*",
+      "sizes": [
+        "lite",
+        "standard",
+        "full"
+      ],
+      "uses": [
+        "commit_policy",
+        "one_liner",
+        "owner_name",
+        "project_name",
+        "review_cadence"
+      ]
+    },
+    {
+      "template": "PROJECT_BRIEF.md",
+      "output": "PROJECT_BRIEF.md",
+      "types": "*",
+      "sizes": [
+        "lite",
+        "standard",
+        "full"
+      ],
+      "uses": [
+        "audience",
+        "comfort_level",
+        "commit_policy",
+        "constraints",
+        "data_sources",
+        "deadline",
+        "devices",
+        "in_scope",
+        "key_terms",
+        "later_ideas",
+        "look_and_feel",
+        "never_events",
+        "one_liner",
+        "open_items",
+        "out_of_scope",
+        "owner_name",
+        "project_name",
+        "project_type",
+        "real_world_changes",
+        "review_cadence",
+        "shape",
+        "shape_reason",
+        "shape_switch_if",
+        "size",
+        "size_reason",
+        "success_definition",
+        "systems",
+        "today"
+      ]
+    },
+    {
+      "template": "CLAUDE.md",
+      "output": "CLAUDE.md",
+      "types": "*",
+      "sizes": [
+        "lite",
+        "standard",
+        "full"
+      ],
+      "uses": [
+        "audience",
+        "commit_policy",
+        "in_scope",
+        "key_terms",
+        "later_ideas",
+        "look_and_feel",
+        "never_events",
+        "one_liner",
+        "out_of_scope",
+        "owner_name",
+        "project_name",
+        "review_cadence",
+        "shape",
+        "shape_switch_if",
+        "success_definition"
+      ]
+    },
+    {
+      "template": "PLAN.md",
+      "output": "PLAN.md",
+      "types": "*",
+      "sizes": [
+        "lite",
+        "standard",
+        "full"
+      ],
+      "uses": [
+        "in_scope",
+        "later_ideas",
+        "one_liner",
+        "open_items",
+        "out_of_scope",
+        "owner_name",
+        "phases_heading",
+        "project_name",
+        "shape",
+        "shape_reason",
+        "shape_switch_if",
+        "today"
+      ]
+    },
+    {
+      "template": "BUILD_LOG.md",
+      "output": "BUILD_LOG.md",
+      "types": "*",
+      "sizes": [
+        "lite",
+        "standard",
+        "full"
+      ],
+      "uses": [
+        "package_check",
+        "package_files",
+        "project_name",
+        "project_type",
+        "size",
+        "today"
+      ]
+    },
+    {
+      "template": "GUIDE-glossary.md",
+      "output": "GUIDE-glossary.md",
+      "types": "*",
+      "sizes": [
+        "standard",
+        "full"
+      ],
+      "uses": [
+        "key_terms",
+        "project_name"
+      ]
+    },
+    {
+      "template": "GUIDE-design.md",
+      "output": "GUIDE-design.md",
+      "types": [
+        "software"
+      ],
+      "sizes": [
+        "standard",
+        "full"
+      ],
+      "uses": [
+        "audience",
+        "devices",
+        "look_and_feel",
+        "project_name"
+      ]
+    },
+    {
+      "template": "GUIDE-reference.md",
+      "output": "GUIDE-reference.md",
+      "types": [
+        "software",
+        "data-analysis"
+      ],
+      "sizes": [
+        "standard",
+        "full"
+      ],
+      "uses": [
+        "data_sources",
+        "project_name",
+        "real_world_changes",
+        "systems"
+      ]
+    },
+    {
+      "template": "GUIDE-house-style.md",
+      "output": "GUIDE-house-style.md",
+      "types": [
+        "other"
+      ],
+      "sizes": [
+        "standard",
+        "full"
+      ],
+      "uses": [
+        "audience",
+        "look_and_feel",
+        "project_name"
+      ]
+    },
+    {
+      "template": "FEATURE_MAP.md",
+      "output": "FEATURE_MAP.md",
+      "types": [
+        "software"
+      ],
+      "sizes": [
+        "standard",
+        "full"
+      ],
+      "uses": [
+        "project_name"
+      ]
+    },
+    {
+      "template": "SAFETY.md",
+      "output": "SAFETY.md",
+      "types": "*",
+      "sizes": [
+        "standard",
+        "full"
+      ],
+      "uses": [
+        "never_events",
+        "owner_name",
+        "project_name",
+        "systems"
+      ],
+      "when_safety": true
+    },
+    {
+      "template": "FEATURE_PLAN.md",
+      "output": "FEATURE_PLAN.md",
+      "types": "*",
+      "sizes": [
+        "lite",
+        "standard",
+        "full"
+      ],
+      "uses": [
+        "later_ideas",
+        "project_name",
+        "today"
+      ],
+      "stage": "later"
+    }
+  ]
+}
