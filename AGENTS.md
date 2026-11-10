@@ -5,12 +5,14 @@ Instructions for anyone (human or AI agent) **working on this repository**. They
 ## What this repository is
 
 - A **public** plugin marketplace (`github.com/pricemethod/wheelhouse-plugin`) that Wheelhouse customers add to Claude Code, Cursor, Codex, ChatGPT and Grok to use skills built by the Wheelhouse team on the [Wheelhouse RM API](https://api.usewheelhouse.com/wheelhouse_rm_api) and the Wheelhouse MCP (`https://mcp.usewheelhouse.com/mcp`).
-- It publishes **one plugin**, `wheelhouse-skills` (source `./wheelhouse-skills`), which holds both kinds of skill:
+- It publishes **two plugins**:
+  - `project-method` (source `./project-method`, display name "Wheelhouse Project Method"): a guided project-building method (interview → project package → story-by-story build). It is built and maintained outside this repo and committed here as its built output. Each skill folder carries copies of the shared `references/`, `templates/`, `packs/` and `scripts/` files, because Claude's chat loads only a skill's own folder; never edit one copy by hand. Replace the whole `project-method/` folder from a new build, and keep its `CHANGELOG.md` out of the repo (it names testers and internal pages). Its Wheelhouse facts live in `project-method/references/wheelhouse.md` and `project-method/packs/wheelhouse/`. When an API change affects `wheelhouse-skills`, check those files too and send corrections to the plugin's maintainer.
+  - `wheelhouse-skills` (source `./wheelhouse-skills`), which holds both kinds of Wheelhouse skill:
 
-  | Skills | Scope |
-  |---|---|
-  | `MCP-*`, `COWORK-Data-Syncs` | **Read-only**: pacing, diagnostics, leaderboards, local data syncs |
-  | `Context-*` | **Write-capable**: preferences, Events & Seasons, Custom Rates, PriceLabs migration reference |
+    | Skills | Scope |
+    |---|---|
+    | `MCP-*`, `COWORK-Data-Syncs` | **Read-only**: pacing, diagnostics, leaderboards, local data syncs |
+    | `Context-*` | **Write-capable**: preferences, Events & Seasons, Custom Rates, PriceLabs migration reference |
 
 - Until version 0.3.0 the write skills shipped as a separate `wheelhouse-writes` plugin. They were merged into `wheelhouse-skills` so customers install one plugin. Keep the read/write line clear inside the plugin: changes to preferences, Events & Seasons or Custom Rates always go through the matching `Context-*` skill. An `MCP-*` read skill may offer a small, self-contained write of its own (for example `MCP-Listing-Map-visual` tagging the listings selected on the map) only if it follows the MCP write-safety rule below: read current state first, show exactly what will change, default to the non-destructive option, and write only after explicit confirmation. Say so in the skill's `description`.
 - Only the plugin folder ships to customers. Repo-root files (this guide, `README.md`, `.gitignore`) and the marketplace manifests do not install with a plugin.
@@ -52,14 +54,15 @@ Instructions for anyone (human or AI agent) **working on this repository**. They
 
 ## Releasing a change
 
-1. **Bump the version**: patch for fixes and doc corrections, minor for new skills or behavior changes. The version appears in all of these places, and they must match:
-   - `wheelhouse-skills/.claude-plugin/plugin.json`
-   - `wheelhouse-skills/.codex-plugin/plugin.json`
-   - `wheelhouse-skills/.cursor-plugin/plugin.json`
+1. **Bump the version** of the plugin you changed: patch for fixes and doc corrections, minor for new skills or behavior changes. Each plugin's version appears in all of these places (`<plugin>` is `wheelhouse-skills` or `project-method`), and they must match:
+   - `<plugin>/.claude-plugin/plugin.json`
+   - `<plugin>/.codex-plugin/plugin.json`
+   - `<plugin>/.cursor-plugin/plugin.json`
    - its entry in `.claude-plugin/marketplace.json`
    - its entry in `.agents/plugins/marketplace.json`
    - its entry in `.cursor-plugin/marketplace.json`
-   - `metadata.version` in `wheelhouse-skills/SKILL.md`
+   - `metadata.version` in `<plugin>/SKILL.md`
+   - for `project-method`, also the version line at the end of `project-method/README.md`
 2. **Keep the lists in sync.** When adding, removing or renaming a skill, update:
    - the root `README.md` ("What you can ask")
    - the skills table in `wheelhouse-skills/SKILL.md` (and `references/write-skills-notes.md` for a write skill)

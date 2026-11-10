@@ -2,10 +2,14 @@
 
 Give your AI agent a captain in the Wheelhouse — agent skills and plugins for the [Wheelhouse Revenue Management MCP](https://mcp.usewheelhouse.com/mcp).
 
-This marketplace publishes one plugin, **wheelhouse-skills** (`./wheelhouse-skills`). It covers:
+This marketplace publishes two plugins:
+
+**wheelhouse-skills** (`./wheelhouse-skills`) covers:
 
 - **Read-only skills:** portfolio pacing, pricing diagnostics, leaderboards, and local data-sync/caches
 - **Write skills:** preferences/rule hierarchy, Events & Seasons, Custom Rates — each as an interactive MCP skill that confirms before writing and a dry-run/`--apply` direct-API sibling — plus a PriceLabs migration reference
+
+**project-method** (`./project-method`, shown as **Wheelhouse Project Method**) is a guided way to build any project with Claude: a plain-language interview turns an idea into a project plan, then Claude builds it with you one reviewed step at a time. It works for software, data and analysis, documents and automations, with or without Wheelhouse data. See [`project-method/README.md`](project-method/README.md).
 
 > **Merged:** the write skills were previously published as a separate `wheelhouse-writes` plugin. Since version 0.3.0 they ship inside `wheelhouse-skills`. If you installed `wheelhouse-writes`, uninstall it and update `wheelhouse-skills` (or your client's equivalent).
 
@@ -89,6 +93,13 @@ You can also ask it to make changes (it confirms before every write):
 - Add a holiday season or event rule → `Context-Events&Seasons` (or `Context-Events&Seasons-API`)
 - Set or combine a custom rate for specific dates → `Context-CustomRates` (or `Context-CustomRates-API`)
 - Recreate my PriceLabs setup in Wheelhouse → `Context-PriceLabsMigration`
+
+With **project-method** installed, plan and build your own project:
+
+- Start Project Method / I want to build something → `get-ready`, then `start-project-method`
+- Where are we? → `where-are-we`
+- What's next? → `next-story`
+- I want to add a feature → `add-feature`
 
 ## Authentication
 

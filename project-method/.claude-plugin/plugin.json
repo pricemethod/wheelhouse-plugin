@@ -1,0 +1,20 @@
+{
+  "name": "project-method",
+  "displayName": "Wheelhouse Project Method",
+  "version": "0.3.2",
+  "description": "By Wheelhouse. A guided method for building any project: a plain-language interview turns an idea into a complete project package (rules, plan, stories, log), then walks you through the build one reviewed story at a time. Software, data and analysis work, documents and automations.",
+  "author": {
+    "name": "Wheelhouse",
+    "email": "support@usewheelhouse.com"
+  },
+  "repository": "https://github.com/pricemethod/wheelhouse-plugin",
+  "license": "Apache-2.0",
+  "keywords": [
+    "project-planning",
+    "methodology",
+    "user-stories",
+    "build-log",
+    "guided-build",
+    "non-technical"
+  ]
+}
