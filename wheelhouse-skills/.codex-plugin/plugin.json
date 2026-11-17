@@ -1,6 +1,6 @@
 {
   "name": "wheelhouse-skills",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Wheelhouse Revenue Management agent skills and MCP plugin for mcp.usewheelhouse.com. Read: portfolio pacing, pricing diagnostics, leaderboards, occupancy-vs-market charts, a portfolio map and local data caches. Write: preferences, Events & Seasons and Custom Rates (confirm-before-write MCP skills and dry-run/--apply API skills), plus a PriceLabs migration reference.",
   "author": {
     "name": "Wheelhouse",
