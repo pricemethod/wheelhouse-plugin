@@ -2,7 +2,7 @@
 name: wheelhouse-skills
 description: Wheelhouse Revenue Management agent skills for the Wheelhouse MCP (mcp.usewheelhouse.com). STLY pacing, future-rate overpricing, price-change attribution, local data caches, live pickup priority lists, occupancy-vs-market charts, a portfolio map, and confirm-before-write changes to preferences, Events & Seasons and Custom Rates.
 metadata:
-  version: "0.3.0"
+  version: "0.3.1"
   author:
     name: Wheelhouse
     email: support@usewheelhouse.com
