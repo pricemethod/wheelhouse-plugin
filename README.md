@@ -6,10 +6,12 @@ This marketplace publishes two plugins:
 
 **wheelhouse-skills** (`./wheelhouse-skills`) covers:
 
-- **Read-only skills:** portfolio pacing, pricing diagnostics, leaderboards, and local data-sync/caches
+- **Read-only skills:** portfolio pacing, pricing and booking-window diagnostics, leaderboards, occupancy-vs-market charts, market and event demand reports, MLOS strategy and a portfolio map (a few, like the Dynamic Set builder, offer a small confirm-before-write step)
 - **Write skills:** preferences/rule hierarchy, Events & Seasons, Custom Rates — each as an interactive MCP skill that confirms before writing and a dry-run/`--apply` direct-API sibling — plus a PriceLabs migration reference
 
 **project-method** (`./project-method`, shown as **Wheelhouse Project Method**) is a guided way to build any project with Claude: a plain-language interview turns an idea into a project plan, then Claude builds it with you one reviewed step at a time. It works for software, data and analysis, documents and automations, with or without Wheelhouse data. See [`project-method/README.md`](project-method/README.md).
+
+> **Renamed skills (0.4.0):** skill names now follow one pattern: `MCP-` or `xContext-` followed by lowercase words. The write skills moved from `Context-*` to `xContext-*` (for example `Context-CustomRates` is now `xContext-custom-rates`, and `Context-Events&Seasons` is now `xContext-events-seasons`), and a few read skills changed case (for example `MCP-Leaderboard-Fast-Seller` is now `MCP-leaderboard-fast-seller`). The `COWORK-Data-Syncs` skill has been removed.
 
 > **Merged:** the write skills were previously published as a separate `wheelhouse-writes` plugin. Since version 0.3.0 they ship inside `wheelhouse-skills`. If you installed `wheelhouse-writes`, uninstall it and update `wheelhouse-skills` (or your client's equivalent).
 
@@ -78,21 +80,29 @@ Once the plugin and MCP are connected, ask your assistant things like:
 
 - How is this listing or portfolio pacing vs same time last year? → `MCP-stly-pacing-calculations`
 - Are future months overpriced vs last year’s booked rates? → `MCP-future-rate-overpricing`
+- Is this listing overpriced vs. the neighborhood over the next 60 days? → `MCP-market-overpricing-check`
 - Did a recent rate or preference change drive bookings? → `MCP-price-change-attribution`
 - Did that custom rate get booked? → `MCP-custom-rate-attribution`
-- Who needs attention / isn’t booking? → `MCP-Leaderboard-Poor-Occ-Pickup`
-- Which listings are selling fast? → `MCP-Leaderboard-Fast-Seller`
-- Which nights are soft vs. the market for this segment? → `MCP-Occ-Heatmap-Segment-Market`
+- Why has my 30–60 day booking window slowed down? → `MCP-booking-window-diagnosis`
+- Who needs attention / isn’t booking? → `MCP-leaderboard-poor-occ-pickup`
+- Which listings trail their neighborhood and look overpriced? → `MCP-leaderboard-price-gap-priority-neighborhood`
+- Which listings are selling fast? → `MCP-leaderboard-fast-seller`
+- Which nights are soft vs. the market for this segment? → `MCP-occ-heatmap-segment-market`
 - Chart this segment's occupancy vs. market high performers by month → `MCP-segment-vs-market-occupancy-graph`
-- Map my listings → `MCP-Listing-Map-visual`
-- Sync listings, KPIs, reservations, or calendars to disk → `COWORK-Data-Syncs`
+- Build a market report / which events actually move demand here? → `MCP-market-event-demand-report`
+- Show this year's events on a demand timeline for my market → `MCP-event-timeline-market-report`
+- Recommend a minimum-stay strategy for my market → `MCP-mlos-strat-allbedroom` (or `MCP-mlos-strat-bybedroom` for one bedroom count)
+- Build a comp set (Dynamic Set) for this listing → `MCP-dynamic-set-builder`
+- Map my listings → `MCP-listing-map-visual`
+- How do I compare my rates with market or AirDNA numbers? → `xContext-market-data`
 
 You can also ask it to make changes (it confirms before every write):
 
-- Change my base price / seasonality / minimum stay → `Context-Preferences` (or `Context-Preferences-API` for an unattended script)
-- Add a holiday season or event rule → `Context-Events&Seasons` (or `Context-Events&Seasons-API`)
-- Set or combine a custom rate for specific dates → `Context-CustomRates` (or `Context-CustomRates-API`)
-- Recreate my PriceLabs setup in Wheelhouse → `Context-PriceLabsMigration`
+- Change my base price / seasonality / minimum stay → `xContext-preferences` (or `xContext-preferences-api` for an unattended script)
+- Add a holiday season or event rule → `xContext-events-seasons` (or `xContext-events-seasons-api`)
+- Set or combine a custom rate for specific dates → `xContext-custom-rates` (or `xContext-custom-rates-api`)
+- Offset Airbnb's new-listing discount on newly listed properties → `MCP-airbnb-new-listing-discount-uplift` (dry-run by default)
+- Recreate my PriceLabs setup in Wheelhouse → `xContext-pricelabs-migration`
 
 With **project-method** installed, plan and build your own project:
 
@@ -105,7 +115,7 @@ With **project-method** installed, plan and build your own project:
 
 MCP clients authenticate with **OAuth**. Sign in with your Wheelhouse account — do not paste an RM API key into chat. This applies to every MCP-orchestrated skill.
 
-The `COWORK-Data-Syncs` skill and the `-API` write skills use a local API key **file** on disk instead of OAuth for unattended/scripted runs. Follow each skill's own setup; never paste the key into the conversation. The `-API` write skills are dry-run by default — they only write with an explicit `--apply` flag after you review the printed diff.
+The `-api` write skills use a local API key **file** on disk instead of OAuth for unattended/scripted runs. Follow each skill's own setup; never paste the key into the conversation. The `-API` write skills are dry-run by default — they only write with an explicit `--apply` flag after you review the printed diff.
 
 ## Links
 

@@ -1,6 +1,6 @@
 ---
 name: MCP-segment-vs-market-occupancy-graph
-description: "Builds an interactive month-by-month occupancy line chart for one Wheelhouse portfolio segment against a market's high performers — current on-the-books position only, no last-year comparison — live through the connected Wheelhouse MCP, in Wheelhouse brand colors. Use for 'how are we pacing against the market right now', a current occupancy graph by month, or a two-line segment-vs-market chart. For a night-by-night view use MCP-Occ-Heatmap-Segment-Market; for pace vs. last year use MCP-stly-pacing-calculations."
+description: "Builds an interactive month-by-month occupancy line chart for one Wheelhouse portfolio segment against a market's high performers — current on-the-books position only, no last-year comparison — live through the connected Wheelhouse MCP, in Wheelhouse brand colors. Use for 'how are we pacing against the market right now', a current occupancy graph by month, or a two-line segment-vs-market chart. For a night-by-night view use MCP-occ-heatmap-segment-market; for pace vs. last year use MCP-stly-pacing-calculations."
 ---
 
 # Segment vs. market occupancy graph (current only)
@@ -219,7 +219,7 @@ where the gap is widest. Then the caveats that did not go on the page:
   nights so the reader can size one booking's effect.
 
 Offer two follow-ups in one line each: the whole-market version (a single re-run
-with `performance` omitted), and `MCP-Occ-Heatmap-Segment-Market` if they want
+with `performance` omitted), and `MCP-occ-heatmap-segment-market` if they want
 to see which individual nights are soft.
 
 Occupancy alone doesn't diagnose. Behind the benchmark could be price, minimum

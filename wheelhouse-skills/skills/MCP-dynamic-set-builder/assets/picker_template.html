@@ -1,0 +1,98 @@
+<h2 class="sr-only">Dynamic Set candidates, sortable by category and overall score, with checkboxes to choose set members.</h2>
+<style>
+.ds-wrap{overflow-x:auto;border:0.5px solid var(--border);border-radius:12px}
+.ds-t{width:100%;min-width:760px;border-collapse:collapse;font-size:13px}
+.ds-t th{position:sticky;top:0;background:var(--surface-1);text-align:left;font-weight:500;color:var(--text-secondary);padding:8px;cursor:pointer;white-space:nowrap;border-bottom:0.5px solid var(--border)}
+.ds-t td{padding:7px 8px;border-bottom:0.5px solid var(--border);vertical-align:middle}
+.ds-t tr.sel td{background:var(--bg-tint-magenta, var(--bg-accent))}
+.ds-n{text-align:right;font-variant-numeric:tabular-nums}
+.ds-pill{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--surface-1);color:var(--text-secondary);white-space:nowrap}
+.ds-go{background:#e80edf;color:#fff;border:none}
+.ds-go:hover{background:#bd08b6}
+</style>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:0 0 1rem">
+  <div style="background:var(--surface-1);border-radius:var(--radius);padding:12px 14px"><div style="font-size:13px;color:var(--text-secondary)">Candidates</div><div style="font-size:22px;font-weight:500" id="ds-c-n">0</div></div>
+  <div style="background:var(--surface-1);border-radius:var(--radius);padding:12px 14px"><div style="font-size:13px;color:var(--text-secondary)">Selected</div><div style="font-size:22px;font-weight:500" id="ds-c-s">0</div></div>
+  <div style="background:var(--surface-1);border-radius:var(--radius);padding:12px 14px"><div style="font-size:13px;color:var(--text-secondary)">Example</div><div style="font-size:14px;font-weight:500;line-height:1.4" id="ds-c-e"></div></div>
+</div>
+<div style="display:flex;gap:8px;align-items:center;margin:0 0 10px;flex-wrap:wrap">
+  <input id="ds-q" placeholder="Filter by title" style="flex:1;min-width:180px">
+  <button id="ds-all" type="button">Select shown</button>
+  <button id="ds-none" type="button">Clear</button>
+</div>
+<div class="ds-wrap"><table class="ds-t"><thead><tr id="ds-h"></tr></thead><tbody id="ds-b"></tbody></table></div>
+<div style="display:flex;gap:8px;align-items:flex-start;margin:1rem 0 0;flex-wrap:wrap">
+  <div style="flex:1;min-width:220px"><input id="ds-name" placeholder="Set name" style="width:100%"><div id="ds-err" style="font-size:13px;color:var(--text-danger);margin-top:4px;min-height:16px"></div></div>
+  <button id="ds-create" class="ds-go" type="button">Create set ↗</button>
+</div>
+<div id="ds-fallback" style="display:none;margin-top:8px;font-size:13px;color:var(--text-secondary)">Copy this and send it to Claude:<textarea id="ds-fb-text" readonly style="width:100%;height:70px;margin-top:4px;font-family:var(--font-mono);font-size:12px"></textarea></div>
+<script>
+const D = __DATA__;
+const META = __META__;
+const C = D.cols, R = D.rows.map(r => Object.fromEntries(C.map((c, i) => [c, r[i]])));
+const SRC = {A: "Airbnb", V: "Vrbo", B: "Booking.com"};
+const COLS = [
+  {k: "_sel", l: ""},
+  {k: "title", l: "Listing"},
+  {k: "src", l: "OTA"},
+  {k: "dist_mi", l: "Dist (mi)", n: 1},
+  {k: "same", l: "Same complex", n: 1},
+  {k: "open", l: "Openness", n: 1},
+  {k: "perf", l: "Performance", n: 1},
+  {k: "overall", l: "Overall", n: 1}
+];
+if (META.views) COLS.push({k: "view", l: "View", n: 1});
+const sel = new Set();
+let sortK = "overall", dir = -1, q = "";
+document.getElementById("ds-c-n").textContent = R.length;
+document.getElementById("ds-c-e").textContent = META.example;
+const h = document.getElementById("ds-h");
+COLS.forEach(c => {
+  const th = document.createElement("th");
+  th.textContent = c.l; if (c.n) th.style.textAlign = "right";
+  if (c.k !== "_sel") th.onclick = () => { dir = sortK === c.k ? -dir : -1; sortK = c.k; draw(); };
+  h.appendChild(th);
+});
+function shown() {
+  return R.filter(r => !q || r.title.toLowerCase().includes(q)).sort((a, b) => {
+    const x = a[sortK], y = b[sortK];
+    return (typeof x === "string" ? x.localeCompare(y) : x - y) * dir;
+  });
+}
+function cell(tr, html, num) { const td = document.createElement("td"); td.innerHTML = html; if (num) td.className = "ds-n"; tr.appendChild(td); }
+function esc(s) { return String(s).replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[m])); }
+function draw() {
+  [...h.children].forEach((th, i) => { const c = COLS[i]; th.textContent = c.l + (c.k === sortK ? (dir < 0 ? " ↓" : " ↑") : ""); });
+  const b = document.getElementById("ds-b"); b.innerHTML = "";
+  shown().forEach(r => {
+    const tr = document.createElement("tr"); if (sel.has(r.id)) tr.className = "sel";
+    const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = sel.has(r.id);
+    cb.setAttribute("aria-label", "Select " + r.title);
+    cb.onchange = () => { cb.checked ? sel.add(r.id) : sel.delete(r.id); tr.className = cb.checked ? "sel" : ""; count(); };
+    const td = document.createElement("td"); td.appendChild(cb); tr.appendChild(td);
+    const tags = (r.pinned ? ' <span class="ds-pill">Known include</span>' : "") + (r.name_match >= 1 ? ' <span class="ds-pill">Name match</span>' : r.name_match > 0 ? ' <span class="ds-pill">Name variation</span>' : "") + (r.also_on ? ' <span class="ds-pill">Also on ' + r.also_on.split(",").map(s => SRC[s] || s).join(", ") + '</span>' : "");
+    cell(tr, '<a href="' + esc(r.url) + '">' + esc(r.title) + '</a>' + tags + '<div style="font-size:11px;color:var(--text-muted)">' + esc(r.type) + " · fwd occ ≥" + r.fwd_occ_band + "% · trailing occ " + r.trail_occ + "% · open " + r.open_share + "%</div>");
+    cell(tr, SRC[r.src] || r.src);
+    cell(tr, Number(r.dist_mi).toFixed(2), 1);
+    cell(tr, r.same, 1); cell(tr, r.open, 1); cell(tr, r.perf, 1);
+    cell(tr, '<span style="font-weight:500">' + r.overall + "</span>", 1);
+    if (META.views) cell(tr, r.view ? "Yes" : "", 1);
+    b.appendChild(tr);
+  });
+}
+function count() { document.getElementById("ds-c-s").textContent = sel.size; }
+document.getElementById("ds-q").oninput = e => { q = e.target.value.toLowerCase(); draw(); };
+document.getElementById("ds-all").onclick = () => { shown().forEach(r => sel.add(r.id)); count(); draw(); };
+document.getElementById("ds-none").onclick = () => { sel.clear(); count(); draw(); };
+const nm = document.getElementById("ds-name"), err = document.getElementById("ds-err");
+nm.oninput = () => { err.textContent = ""; };
+document.getElementById("ds-create").onclick = () => {
+  const name = nm.value.trim();
+  if (!name) { err.textContent = "Enter a set name first"; return; }
+  if (!sel.size) { err.textContent = "Select at least one listing"; return; }
+  const msg = 'Create the Dynamic Set "' + name + '" with these listing IDs: ' + [...sel].join(", ");
+  if (typeof sendPrompt === "function") { sendPrompt(msg); }
+  else { document.getElementById("ds-fallback").style.display = "block"; document.getElementById("ds-fb-text").value = msg; }
+};
+draw();
+</script>
