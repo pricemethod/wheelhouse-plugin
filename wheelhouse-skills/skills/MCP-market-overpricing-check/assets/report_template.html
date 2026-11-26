@@ -1,0 +1,92 @@
+<style>
+  .rp{color:var(--text-primary);font-size:13px;line-height:1.45;}
+  .rp .hd{font-size:14px;font-weight:500;}
+  .rp .sub{font-size:11px;color:var(--text-secondary);margin-top:2px;}
+  .rp .sec{font-size:11px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--text-secondary);margin:18px 0 6px;}
+  .rp table{width:100%;border-collapse:collapse;}
+  .rp th,.rp td{padding:7px 10px;border-bottom:0.5px solid rgba(128,128,120,0.28);text-align:left;font-size:12px;}
+  .rp th{font-weight:500;color:var(--text-secondary);}
+  .rp .n{text-align:center;}
+  .rp td.v{font-weight:500;}
+  .rp .dim{color:var(--text-secondary);}
+  .hm{display:grid;grid-template-columns:64px repeat(7,minmax(0,1fr)) 62px;gap:3px;}
+  .hm .h{font-size:11px;color:var(--text-secondary);text-align:center;padding:2px 0 4px;}
+  .hm .h.we{color:var(--text-primary);font-weight:500;}
+  .hm .wk{font-size:11px;color:var(--text-secondary);display:flex;align-items:center;}
+  .hm .c{height:34px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-variant-numeric:tabular-nums;}
+  .hm .c.empty{background:transparent;}
+  .hm .c.na{background:rgba(128,128,120,0.22);color:var(--text-secondary);font-size:10px;}
+  .hm .tot{font-weight:500;}
+  .we-tag{display:inline-block;font-size:9px;letter-spacing:.04em;text-transform:uppercase;color:var(--text-secondary);margin-left:2px;}
+  .legend{display:flex;align-items:center;gap:6px;margin-top:12px;font-size:11px;color:var(--text-secondary);flex-wrap:wrap;}
+  .legend .sw{width:26px;height:12px;border-radius:3px;}
+</style>
+<div class="rp" id="rp"></div>
+<script>
+/* Replace everything between DATA_START and DATA_END with the dict returned by scripts/analyze_listing.py (valid JSON). */
+var REPORT = /*DATA_START*/{"status":"ok","listing":{"title":"Example listing","units":1},"params":{"benchmark":"median","big":0.15},"today":"2026-11-12","fee":{"mult":1.0,"source":"none"},"checks":{"c1":"Yes","c1_label":"Occupancy behind the neighborhood","c2":"No","c3":"Yes, but small"},"weekly":[{"start":"2026-11-08","wd":null,"we":12,"tot":12,"partial":true}],"daily":[["2026-11-12",4,-5.0,200,210],["2026-11-13",5,12.0,235,210],["2026-11-14",6,"unavail",null,null]],"notes":[]}/*DATA_END*/;
+
+var MN=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function pd(s){return new Date(s+"T00:00:00Z");}
+function iso(d){return d.toISOString().slice(0,10);}
+function lbl(d){return MN[d.getUTCMonth()]+" "+d.getUTCDate();}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");}
+function color(v){
+  if(v>=0.5){var a=Math.min(0.88,0.22+v/75);return "rgba(227,73,72,"+a.toFixed(2)+")";}
+  var b=Math.min(0.55,0.07+Math.max(0,-v)/80);return "rgba(42,120,214,"+b.toFixed(2)+")";
+}
+function pct(v){return v==null?'<span class="dim">\u2014</span>':'+'+v+'%';}
+
+var R=REPORT,root=document.getElementById("rp"),h="";
+var benchName=R.params.benchmark==="median"?"neighborhood median":"neighborhood 75th percentile";
+var head='<div class="hd">'+esc(R.listing.title||"Listing")+'</div>';
+
+if(R.status!=="ok"){
+  h=head+'<div class="sub">'+esc(R.message||"Skipped.")+'</div>';
+}else{
+  var sub="Benchmark: "+benchName+" \u00b7 fee multiplier "+R.fee.mult.toFixed(2)+"x";
+  if(R.listing.units>1)sub+=" \u00b7 "+R.listing.units+" units";
+  h=head+'<div class="sub">'+esc(sub)+'</div>';
+  (R.notes||[]).forEach(function(n){h+='<div class="sub">'+esc(n)+'</div>';});
+
+  h+='<div class="sec">Checks</div><table><tbody>';
+  h+='<tr><td>1. '+esc(R.checks.c1_label)+'</td><td class="v">'+esc(R.checks.c1)+'</td></tr>';
+  h+='<tr><td>2. Stalled with availability</td><td class="v">'+esc(R.checks.c2)+'</td></tr>';
+  h+='<tr><td>3. More than '+Math.round(R.params.big*100)+'% above market</td><td class="v">'+esc(R.checks.c3)+'</td></tr>';
+  h+='</tbody></table>';
+
+  h+='<div class="sec">Weeks priced above the '+benchName+'</div>';
+  h+='<table><thead><tr><th>Week of (Sun)</th><th class="n">Weekday (Sun\u2013Thu)</th><th class="n">Weekend (Fri/Sat)</th><th class="n">Total week</th></tr></thead><tbody>';
+  var tot={};
+  R.weekly.forEach(function(w){
+    tot[w.start]=w.tot;
+    h+='<tr><td>'+lbl(pd(w.start))+(w.partial?' <span class="dim">(partial)</span>':'')+'</td><td class="n">'+pct(w.wd)+'</td><td class="n">'+pct(w.we)+'</td><td class="n">'+pct(w.tot)+'</td></tr>';
+  });
+  h+='</tbody></table>';
+
+  h+='<div class="sec">Night by night vs the '+benchName+'</div>';
+  var byKey={};R.daily.forEach(function(r){byKey[r[0]]=r;});
+  var first=pd(R.daily[0][0]),last=pd(R.daily[R.daily.length-1][0]);
+  var start=new Date(first.getTime()-R.daily[0][1]*86400000);
+  var g='<div class="hm" role="img" aria-label="Heatmap of weeks by day, colored by percent above or below the benchmark. Blue is below, orange to red is above, gray is not available."><div></div>';
+  ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].forEach(function(n,i){g+='<div class="h'+(i>=5?' we':'')+'">'+n+(i>=5?'<span class="we-tag">wknd</span>':'')+'</div>';});
+  g+='<div class="h">Total wk</div>';
+  for(var w=new Date(start.getTime());w<=last;w=new Date(w.getTime()+7*86400000)){
+    g+='<div class="wk">'+lbl(w)+'</div>';
+    for(var i=0;i<7;i++){
+      var d=new Date(w.getTime()+i*86400000),r=byKey[iso(d)];
+      if(!r){g+='<div class="c empty"></div>';continue;}
+      if(typeof r[2]==="string"){g+='<div class="c na" title="'+lbl(d)+': '+(r[2]==="skip"?'skipped (short open stretch)':'not available')+'">'+(r[2]==="skip"?'skip':'n/a')+'</div>';continue;}
+      var v=r[2],rr=Math.round(v),lab=(rr>0?'+':'')+rr;
+      g+='<div class="c" style="background:'+color(v)+'" title="'+lbl(d)+': $'+r[3]+' vs $'+r[4]+' ('+lab+'%)">'+lab+'</div>';
+    }
+    var t=tot[iso(w)];
+    g+='<div class="c tot" style="'+(t!=null?'background:'+color(t):'background:transparent;color:var(--text-secondary)')+'">'+(t!=null?'+'+t+'%':'\u2014')+'</div>';
+  }
+  g+='</div><div class="legend"><span>Rate vs '+benchName+' (%):</span>';
+  [-20,0,20,40,60,80].forEach(function(s){g+='<span class="sw" style="background:'+color(s===0?0.01:s)+'"></span><span>'+(s>0?'+':'')+s+'</span>';});
+  g+='<span style="margin-left:8px;">Total wk = avg of nights above the benchmark</span></div>';
+  h+=g;
+}
+root.innerHTML=h;
+</script>

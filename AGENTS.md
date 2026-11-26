@@ -11,10 +11,10 @@ Instructions for anyone (human or AI agent) **working on this repository**. They
 
     | Skills | Scope |
     |---|---|
-    | `MCP-*`, `COWORK-Data-Syncs` | **Read-only**: pacing, diagnostics, leaderboards, local data syncs |
-    | `Context-*` | **Write-capable**: preferences, Events & Seasons, Custom Rates, PriceLabs migration reference |
+    | `MCP-*` | **Read-only** (a few offer a small confirm-before-write step): pacing, diagnostics, leaderboards, reports, Dynamic Set building |
+    | `xContext-*` | **Write-capable**: preferences, Events & Seasons, Custom Rates; plus write-free reference skills for market data and PriceLabs migration |
 
-- Until version 0.3.0 the write skills shipped as a separate `wheelhouse-writes` plugin. They were merged into `wheelhouse-skills` so customers install one plugin. Keep the read/write line clear inside the plugin: changes to preferences, Events & Seasons or Custom Rates always go through the matching `Context-*` skill. An `MCP-*` read skill may offer a small, self-contained write of its own (for example `MCP-Listing-Map-visual` tagging the listings selected on the map) only if it follows the MCP write-safety rule below: read current state first, show exactly what will change, default to the non-destructive option, and write only after explicit confirmation. Say so in the skill's `description`.
+- Until version 0.3.0 the write skills shipped as a separate `wheelhouse-writes` plugin. They were merged into `wheelhouse-skills` so customers install one plugin. Keep the read/write line clear inside the plugin: changes to preferences, Events & Seasons or Custom Rates always go through the matching `xContext-*` skill. An `MCP-*` read skill may offer a small, self-contained write of its own (for example `MCP-listing-map-visual` tagging the listings selected on the map) only if it follows the MCP write-safety rule below: read current state first, show exactly what will change, default to the non-destructive option, and write only after explicit confirmation. Say so in the skill's `description`.
 - Only the plugin folder ships to customers. Repo-root files (this guide, `README.md`, `.gitignore`) and the marketplace manifests do not install with a plugin.
 
 ## Public-repo rules (apply to every committed file)
@@ -33,7 +33,7 @@ Instructions for anyone (human or AI agent) **working on this repository**. They
 
 - **Layout:** one folder per skill under `<plugin>/skills/<skill-name>/`, containing `SKILL.md` (YAML frontmatter with `name` and `description`), optional `references/` for long material, and optional `scripts/` for code.
 - **`description` frontmatter drives routing.** Keep it accurate: say what the skill does, when to trigger it, and when to use a sibling instead.
-- **Hand-offs** must name skills that exist in this repo, by their exact name (e.g. `MCP-stly-pacing-calculations`, `Context-CustomRates`). Check with a search before committing.
+- **Hand-offs** must name skills that exist in this repo, by their exact name (e.g. `MCP-stly-pacing-calculations`, `xContext-custom-rates`). Check with a search before committing.
 - **Tool names:** use full MCP tool names (`wheelhouse_rmGetReservations`, not `GetReservations`).
 - **Write safety, MCP skills:** fetch current state first, show the client exactly what will change (and any existing values it replaces, splits or removes), and write only after explicit confirmation. Preference rule arrays are fully replaced on write, so always fetch, merge, then write.
 - **Write safety, direct-API (`-api`) skills:** dry-run by default and print the exact request body and diff. Write only with an explicit `--apply` flag that the customer sets after reviewing the diff.
